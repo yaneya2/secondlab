@@ -6,6 +6,9 @@
 #include "IEnumerator.h"
 
 template<typename T>
+class MutableArraySequence;
+
+template<typename T>
 class Sequence {
 protected:
     virtual Sequence<T>* instance() = 0;
@@ -70,6 +73,68 @@ public:
             acc = func(acc, Get(i));
         return acc;
     }
+
+    // //еще раз проверить
+    // static Sequence<Sequence<void*>*>* zipN(const Sequence<Sequence<void*>*>* lists) {
+    //     Sequence<Sequence<void*>*>* temp = lists->GetSubsequence(0, 0);
+    //     Sequence<Sequence<void*>*>* result = temp->createEmpty();
+    //     if (lists->GetLength() == 0) {
+    //         delete temp;
+    //         return result;
+    //     }
+    //
+    //     size_t num_lists = lists->GetLength();
+    //     size_t len = lists->Get(0)->GetLength();
+    //
+    //     for (size_t i = 1; i < num_lists; i++) {
+    //         size_t current_len = lists->Get(i)->GetLength();
+    //         if (current_len < len) {
+    //             len = current_len;
+    //         }
+    //     }
+    //
+    //     for (size_t col = 0; col < len; col++) {
+    //         Sequence<void*>* column_temp = lists->Get(0)->GetSubsequence(0, 0);
+    //         Sequence<void*>* column = column_temp->createEmpty();
+    //         delete column_temp;
+    //
+    //         for (size_t row = 0; row < num_lists; row++) {
+    //             void* value = lists->Get(row)->Get(col);
+    //             column = column->Append(value);
+    //         }
+    //         result = result->Append(column);
+    //     }
+    //     return result;
+    // }
+    //
+    // static Sequence<Sequence<void*>*>* unzip(const Sequence<Sequence<void*>*>* tuples) {
+    //     Sequence<Sequence<void*>*>* temp = tuples->GetSubsequence(0, 0);
+    //     Sequence<Sequence<void*>*>* result = temp->createEmpty();
+    //
+    //     if (tuples->GetLength() == 0) {
+    //         delete temp;
+    //         return result;
+    //     }
+    //
+    //     size_t num_tuples = tuples->GetLength();
+    //
+    //     size_t num_fields = tuples->Get(0)->GetLength();
+    //
+    //     for (size_t field = 0; field < num_fields; field++) {
+    //         Sequence<void*>* column_temp = tuples->Get(0)->GetSubsequence(0, 0);
+    //         Sequence<void*>* column = column_temp->createEmpty();
+    //         delete column_temp;
+    //
+    //         for (size_t tuple_idx = 0; tuple_idx < num_tuples; tuple_idx++) {
+    //             void* value = tuples->Get(tuple_idx)->Get(field);
+    //             column = column->Append(value);
+    //         }
+    //         result = result->Append(column);
+    //     }
+    //
+    //     delete temp;
+    //     return result;
+    // }
 
     Option<T> GetFirst(bool (*pred)(T) = nullptr) {
         size_t len = GetLength();

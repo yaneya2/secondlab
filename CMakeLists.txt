@@ -4,11 +4,8 @@ project(secondlab)
 set(CMAKE_CXX_STANDARD 20)
 
 add_executable(secondlab main.cpp
-        classes/cpp/Sequence.cpp
         classes/headers/Sequence.h
-        classes/cpp/ArraySequence.cpp
         classes/headers/ArraySequence.h
-        classes/cpp/ListSequence.cpp
         classes/headers/ListSequence.h
         classes/headers/DynamicArray.h
         classes/headers/LinkedList.h
@@ -23,6 +20,9 @@ add_executable(secondlab main.cpp
         classes/headers/LinkedListEnumerator.h
         classes/headers/UI.h
         classes/cpp/UI.cpp
-        classes/cpp/BItSequence.cpp
+        classes/headers/BItSequence.cpp
         classes/headers/BItSequence.h
+        classes/cpp/tests.cpp
+        classes/headers/tests.h
+        classes/headers/tests.h
 )
