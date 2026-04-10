@@ -22,7 +22,7 @@ add_executable(secondlab main.cpp
         classes/headers/ImmutableListSequence.h
         classes/headers/LinkedListEnumerator.h
         classes/headers/UI.h
-        classes/headers/UI.cpp
-        classes/headers/BItSequence.cpp
+        classes/cpp/UI.cpp
+        classes/cpp/BItSequence.cpp
         classes/headers/BItSequence.h
 )

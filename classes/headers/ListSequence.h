@@ -5,23 +5,20 @@
 #include "LinkedList.h"
 #include "LinkedListEnumerator.h"
 
+template<typename T>
+class MutableListSequence;
+
 template<class T>
 class ListSequence : public Sequence<T> {
-protected:
-    LinkedList<T>* data;
-    size_t size;      // текущее количество элементов
-
-    // Внутренний конструктор для наследников
-    ListSequence(LinkedList<T>* list, size_t size) : data(list), size(size) {}
-
 public:
-    // Конструкторы
     ListSequence() : data(new LinkedList<T>()), size(0) {}
-    ListSequence(const T* items, size_t count) : data(new LinkedList<T>(items, count)), size(count) {}
-    ListSequence(const ListSequence<T>& other) : data(new LinkedList<T>(*(other.data))), size(other.size) {}
-    virtual ~ListSequence() { delete data; }
 
-    // Операции чтения
+    ListSequence(const T *items, size_t count) : data(new LinkedList<T>(items, count)), size(count) {}
+
+    ListSequence(const ListSequence<T> &other) : data(new LinkedList<T>(*(other.data))), size(other.size) {}
+
+    ~ListSequence() override { delete data; }
+
     T GetFirst() const override {
         if (size == 0) throw std::out_of_range("Sequence is empty");
         return data->GetFirst();
@@ -41,26 +38,26 @@ public:
         return size;
     }
 
-    Sequence<T>* appendImpl(const T& elem) override {
+    Sequence<T> *appendImpl(const T &elem) override {
         data->Append(elem);
         ++size;
         return this;
     }
 
-    Sequence<T>* prependImpl(const T& elem) override {
+    Sequence<T> *prependImpl(const T &elem) override {
         data->Prepend(elem);
         ++size;
         return this;
     }
 
-    Sequence<T>* insertAtImpl(const T& elem, size_t index) override {
+    Sequence<T> *insertAtImpl(const T &elem, size_t index) override {
         if (index > size) throw std::out_of_range("Index out of range");
         data->InsertAt(elem, index);
         ++size;
         return this;
     }
 
-    Sequence<T>* concatImpl(Sequence<T>* other) override {
+    Sequence<T> *concatImpl(const Sequence<T> *other) override {
         size_t otherLen = other->GetLength();
         for (size_t i = 0; i < otherLen; ++i) {
             data->Append(other->Get(i));
@@ -69,9 +66,27 @@ public:
         return this;
     }
 
-    IEnumerator<T>* GetEnumerator() override {
+    Sequence<T> *createEmpty() const override {
+        return new MutableListSequence<T>();
+    }
+
+    Sequence<T> *GetSubsequence(size_t startIndex, size_t endIndex) const override {
+        if (endIndex >= this->size || startIndex > endIndex)
+            throw std::out_of_range("Invalid subsequence bounds");
+
+        LinkedList<T> *sublist = this->data->GetSubList(startIndex, endIndex);
+        return new MutableListSequence<T>(new LinkedList<T>(*sublist), sublist->GetSize());
+    }
+
+    IEnumerator<T> *GetEnumerator() override {
         return new LinkedListEnumerator<T>(this->data);
     }
+
+protected:
+    LinkedList<T> *data;
+    size_t size;
+
+    ListSequence(LinkedList<T> *list, size_t size) : data(list), size(size) {}
 };
 
 #endif //SECONDLAB_LISTSEQUENCE_H

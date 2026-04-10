@@ -16,7 +16,7 @@ public:
 
     ArraySequence(const ArraySequence<T> &other) : data(new DynamicArray<T>(*(other.data))), size(other.size) {}
 
-    virtual ~ArraySequence() { delete data; }
+    ~ArraySequence() override { delete data; }
 
     T GetFirst() const override {
         if (size == 0) throw std::out_of_range("Sequence is empty");
@@ -101,6 +101,7 @@ public:
 
     IEnumerator<T> *GetEnumerator() override {
         class ArrayEnumerator : public IEnumerator<T> {
+        private:
             const DynamicArray<T> *data;
             size_t index;
             size_t length;

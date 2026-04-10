@@ -4,18 +4,23 @@
 template<typename T>
 class Option {
 private:
-    bool _hasValue;
-    T _value;
+    bool hasValue;
+    T value;
+
 public:
-    Option() : _hasValue(false) {}
-    Option(const T& value) : _hasValue(true), _value(value) {}
-    bool HasValue() const { return _hasValue; }
+    Option() : hasValue(false) {}
+
+    Option(const T &value) : hasValue(true), value(value) {}
+
+    bool HasValue() const { return hasValue; }
+
     T GetValue() const {
-        if (!_hasValue) throw std::logic_error("Option has no value");
-        return _value;
+        if (!hasValue) throw std::logic_error("Option has no value");
+        return value;
     }
-    T GetValueOrDefault(const T& defaultValue = T()) const {
-        return _hasValue ? _value : defaultValue;
+
+    T GetValueOrDefault(const T &defaultValue = T()) const {
+        return hasValue ? value : defaultValue;
     }
 };
 #endif //SECONDLAB_OPTION_H

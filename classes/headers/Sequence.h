@@ -10,8 +10,6 @@ class Sequence {
 protected:
     virtual Sequence<T>* instance() = 0;
 
-    virtual ~Sequence() = default;
-
     virtual Sequence<T>* appendImpl(const T& elem) = 0;
     virtual Sequence<T>* prependImpl(const T& elem) = 0;
     virtual Sequence<T>* insertAtImpl(const T& elem, size_t index) = 0;
@@ -102,6 +100,8 @@ public:
             return Option<T>();
         }
     }
+
+    virtual ~Sequence() = default;
 };
 
 #endif

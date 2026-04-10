@@ -7,10 +7,11 @@
 template<typename T>
 class LinkedListEnumerator : public IEnumerator<T> {
 private:
-    const LinkedList<T>* list;
-    LinkedList<T>::Node* current;
+    const LinkedList<T> *list;
+    LinkedList<T>::Node *current;
+
 public:
-    LinkedListEnumerator(const LinkedList<T>* lst) : list(lst), current(nullptr) {}
+    explicit LinkedListEnumerator(const LinkedList<T> *lst) : list(lst), current(nullptr) {}
 
     bool MoveNext() override {
         if (current == nullptr)
