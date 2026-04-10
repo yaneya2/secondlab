@@ -4,34 +4,28 @@
 #include <stdexcept>
 #include "Option.h"
 #include "IEnumerator.h"
-#include <stdexcept>
 
 template<typename T>
 class Sequence {
 protected:
-    // Возвращает указатель на объект, который будет изменён:
-    // - для mutable: this
-    // - для immutable: новый объект (копия)
     virtual Sequence<T>* instance() = 0;
 
-    // Вспомогательные методы для реального изменения (без проверок)
+    virtual ~Sequence() = default;
+
     virtual Sequence<T>* appendImpl(const T& elem) = 0;
     virtual Sequence<T>* prependImpl(const T& elem) = 0;
     virtual Sequence<T>* insertAtImpl(const T& elem, size_t index) = 0;
-    virtual Sequence<T>* concatImpl(Sequence<T>* other) = 0;
+    virtual Sequence<T>* concatImpl(const Sequence<T>* other) = 0;
 
-    // Фабричный метод для создания пустой последовательности того же типа (используется в Map/Where)
     virtual Sequence<T>* createEmpty() const = 0;
 
 public:
-    virtual ~Sequence() = default;
-
     virtual T GetFirst() const = 0;
     virtual T GetLast() const = 0;
     virtual T Get(size_t index) const = 0;
-    virtual Sequence<T>* GetSubsequence(size_t startIndex, size_t endIndex) const = 0;
     virtual size_t GetLength() const = 0;
 
+    virtual Sequence<T>* GetSubsequence(size_t startIndex, size_t endIndex) const = 0;
     virtual IEnumerator<T>* GetEnumerator() = 0;
 
     Sequence<T>* Append(const T& elem) {
