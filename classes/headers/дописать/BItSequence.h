@@ -3,10 +3,9 @@
 
 #include <cstdint>
 #include <stdexcept>
-#include <functional>
-#include "Sequence.h"
-#include "DynamicArray.h"
-#include "IEnumerator.h"
+#include "../Sequence.h"
+#include "../DynamicArray.h"
+#include "../IEnumerator.h"
 
 template<typename T>
 class MutableArraySequence;
@@ -27,8 +26,6 @@ private:
     BitSequence* createEmpty() const override;
     BitSequence* instance() override;
 
-    BitSequence* bitwiseAndOrXor(const BitSequence* other, std::function<bool(bool,bool)> op) const;
-
 public:
     BitSequence(const bool* bits, size_t numBits);
     BitSequence(const char* bitStr);
@@ -44,9 +41,6 @@ public:
     BitSequence* Or(const BitSequence* other) const;
     BitSequence* Xor(const BitSequence* other) const;
     BitSequence* Not() const;
-
-    template<typename U>
-    Sequence<U>* Mask(const Sequence<U>* other) const;
 
     BitSequence* appendImpl(const bool& elem) override;
     BitSequence* prependImpl(const bool& elem) override;

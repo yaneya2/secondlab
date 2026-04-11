@@ -37,35 +37,6 @@ public:
         return size;
     }
 
-
-    Sequence<Sequence<T>*>* zipN(const Sequence<Sequence<T>*>* lists){
-        if (lists->GetLength() == 0) {
-            return lists->createEmpty();
-        }
-
-        size_t num_lists = lists->GetLength();
-        size_t len = lists->Get(0)->GetLength();
-
-        for (size_t i = 1; i < num_lists; i++) {
-            size_t current_len = lists->Get(i)->GetLength();
-            if (current_len < len) {
-                len = current_len;
-            }
-        }
-
-        Sequence<Sequence<T>*>* result = lists->createEmpty();
-
-        for (size_t col = 0; col < len; col++) {
-            Sequence<T>* column = lists->createEmpty();
-            for (size_t row = 0; row < num_lists; row++) {
-                column = column->Append(lists->Get(row)->Get(col));
-            }
-            result = result->Append(column);
-        }
-        return result;
-    }
-
-
     Sequence<T> *appendImpl(const T &elem) override {
         ensureCapacity();
         data->Set(size, elem);
@@ -172,6 +143,7 @@ protected:
         size_t newCap = (currentCap == 0) ? 1 : currentCap * 2;
         this->data->Resize(newCap);
     }
+
 };
 
 #endif // ARRAYSEQUENCE_H

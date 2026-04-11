@@ -20,9 +20,9 @@ add_executable(secondlab main.cpp
         classes/headers/LinkedListEnumerator.h
         classes/headers/UI.h
         classes/cpp/UI.cpp
-        classes/headers/BItSequence.cpp
-        classes/headers/BItSequence.h
+        classes/cpp/BItSequence.cpp
+        classes/headers/дописать/BItSequence.h
         classes/cpp/tests.cpp
-        classes/headers/tests.h
-        classes/headers/tests.h
+        classes/headers/дописать/tests.h
+        classes/headers/дописать/tests.h
 )

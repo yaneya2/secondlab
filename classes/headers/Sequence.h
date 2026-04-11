@@ -16,14 +16,14 @@ protected:
     virtual Sequence<T>* appendImpl(const T& elem) = 0;
     virtual Sequence<T>* prependImpl(const T& elem) = 0;
     virtual Sequence<T>* insertAtImpl(const T& elem, size_t index) = 0;
-    virtual Sequence<T>* concatImpl(const Sequence<T>* other) = 0;
+    virtual Sequence<T>* concatImpl(const Sequence<T>* other) = 0;//сделать через ссылки
 
     virtual Sequence<T>* createEmpty() const = 0;
 
 public:
     virtual T GetFirst() const = 0;
     virtual T GetLast() const = 0;
-    virtual T Get(size_t index) const = 0;
+    //virtual T Get(size_t index) const = 0;
     virtual size_t GetLength() const = 0;
 
     virtual Sequence<T>* GetSubsequence(size_t startIndex, size_t endIndex) const = 0;
@@ -73,6 +73,38 @@ public:
             acc = func(acc, Get(i));
         return acc;
     }
+
+    Option<T> GetFirst(bool (*pred)(T) = nullptr) {
+        size_t len = GetLength();
+        if (pred == nullptr) {
+            if (len == 0) return Option<T>();
+            return Option<T>(Get(0));
+        } else {
+            for (size_t i = 0; i < len; ++i) {
+                T elem = Get(i);
+                if (pred(elem))
+                    return Option<T>(elem);
+            }
+            return Option<T>();
+        }
+    }
+
+    Option<T> GetLast(bool (*pred)(T) = nullptr) {
+        size_t len = GetLength();
+        if (pred == nullptr) {
+            if (len == 0) return Option<T>();
+            return Option<T>(Get(len - 1));
+        } else {
+            for (size_t i = len; i-- > 0; ) {
+                T elem = Get(i);
+                if (pred(elem))
+                    return Option<T>(elem);
+            }
+            return Option<T>();
+        }
+    }
+
+    virtual ~Sequence() = default;
 
     // //еще раз проверить
     // static Sequence<Sequence<void*>*>* zipN(const Sequence<Sequence<void*>*>* lists) {
@@ -135,38 +167,6 @@ public:
     //     delete temp;
     //     return result;
     // }
-
-    Option<T> GetFirst(bool (*pred)(T) = nullptr) {
-        size_t len = GetLength();
-        if (pred == nullptr) {
-            if (len == 0) return Option<T>();
-            return Option<T>(Get(0));
-        } else {
-            for (size_t i = 0; i < len; ++i) {
-                T elem = Get(i);
-                if (pred(elem))
-                    return Option<T>(elem);
-            }
-            return Option<T>();
-        }
-    }
-
-    Option<T> GetLast(bool (*pred)(T) = nullptr) {
-        size_t len = GetLength();
-        if (pred == nullptr) {
-            if (len == 0) return Option<T>();
-            return Option<T>(Get(len - 1));
-        } else {
-            for (size_t i = len; i-- > 0; ) {
-                T elem = Get(i);
-                if (pred(elem))
-                    return Option<T>(elem);
-            }
-            return Option<T>();
-        }
-    }
-
-    virtual ~Sequence() = default;
 };
 
 #endif

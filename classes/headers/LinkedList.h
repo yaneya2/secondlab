@@ -1,9 +1,8 @@
 #ifndef SECONDLAB_LINKEDLIST_H
 #define SECONDLAB_LINKEDLIST_H
 
-#include <iostream>
 #include <stdexcept>
-#include <utility>
+//#include <utility>
 
 template<typename T>
 class LinkedList {
@@ -19,17 +18,17 @@ private:
 
     Node* head;
     Node* tail;
-    size_t size_;
+    size_t size;
 
 public:
     template<typename U> friend class LinkedListEnumerator;
     void swap(LinkedList& other) noexcept {
         std::swap(head, other.head);
         std::swap(tail, other.tail);
-        std::swap(size_, other.size_);
+        std::swap(size, other.size);
     }
 
-    LinkedList() : head(nullptr), tail(nullptr), size_(0) {}
+    LinkedList() : head(nullptr), tail(nullptr), size(0) {}
 
     LinkedList(const T* items, size_t count) : LinkedList() {
         if (count <= 0) {
@@ -42,11 +41,11 @@ public:
             tail = tail->next;
         }
         tail->next = nullptr;
-        size_ = count;
+        size = count;
     }
 
     LinkedList(const LinkedList& other) : LinkedList() {
-        if (other.size_ == 0) {
+        if (other.size == 0) {
             return;
         }
         head = new Node(other.head->data);
@@ -57,7 +56,7 @@ public:
             tail = tail->next;
             current = current->next;
         }
-        size_ = other.size_;
+        size = other.size;
     }
 
     LinkedList& operator=(const LinkedList& other) {
@@ -78,21 +77,21 @@ public:
     }
 
     T GetFirst() const {
-        if (size_ == 0) {
+        if (size == 0) {
             throw std::out_of_range("list is empty");
         }
         return head->data;
     }
 
     T GetLast() const {
-        if (size_ == 0) {
+        if (size == 0) {
             throw std::out_of_range("list is empty");
         }
         return tail->data;
     }
 
     T Get(size_t index) const {
-        if (index >= size_) {
+        if (index >= size) {
             throw std::out_of_range("IndexOutOfRange");
         }
         Node* current = head;
@@ -103,11 +102,11 @@ public:
     }
 
     size_t GetSize() const {
-        return size_;
+        return size;
     }
 
     LinkedList<T>* GetSubList(size_t startIndex, size_t endIndex) const {
-        if (startIndex >= size_ || endIndex >= size_ || startIndex > endIndex) {
+        if (startIndex >= size || endIndex >= size || startIndex > endIndex) {
             throw std::out_of_range("IndexOutOfRange");
         }
         Node* current = head;
@@ -124,39 +123,39 @@ public:
 
     void Append(const T& item) {
         Node* newNode = new Node(item);
-        if (size_ == 0) {
+        if (size == 0) {
             head = newNode;
             tail = newNode;
-            size_ = 1;
+            size = 1;
             return;
         }
         tail->next = newNode;
         tail = tail->next;
-        size_++;
+        size++;
     }
 
     void Prepend(const T& item) {
         Node* newNode = new Node(item);
-        if (size_ == 0) {
+        if (size == 0) {
             head = newNode;
             tail = newNode;
-            size_ = 1;
+            size = 1;
             return;
         }
         newNode->next = head;
         head = newNode;
-        size_++;
+        size++;
     }
 
     void InsertAt(size_t index, const T& item) {
-        if (index > size_) {
+        if (index > size) {
             throw std::out_of_range("IndexOutOfRange");
         }
         if (index == 0) {
             this->Prepend(item);
             return;
-        }
-        if (index == size_) {
+        }//убрать эту ветку
+        if (index == size) {
             this->Append(item);
             return;
         }
@@ -167,19 +166,19 @@ public:
         }
         newNode->next = prev->next;
         prev->next = newNode;
-        size_++;
+        size++;
     }
 
-    LinkedList<T>* Concat(LinkedList<T>* list) const {
+    LinkedList<T>* Concat(const LinkedList<T> &list) const {
         if (list == nullptr) {
             throw std::invalid_argument("list is nullptr");
         }
         if (list->GetSize() == 0) {
             return this;
         }
-        LinkedList<T>* newList = new LinkedList<T>(*this);
+        LinkedList<T>* newList = new LinkedList<T>(*this);//использовать нумератор
         Node* current = list->head;
-        for (size_t i = 0; i < list->size_; i++) {
+        for (size_t i = 0; i < list->size; i++) {
             newList->Append(current->data);
             current = current->next;
         }
