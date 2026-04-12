@@ -3,7 +3,6 @@
 
 #include "Sequence.h"
 #include "LinkedList.h"
-#include "LinkedListEnumerator.h"
 
 template<typename T>
 class MutableListSequence;
@@ -30,12 +29,17 @@ public:
     }
 
     T Get(size_t index) const override {
-        if (index >= size) throw std::out_of_range("Index out of range");
+        if (size == 0) throw std::out_of_range("Sequence is empty");
         return data->Get(index);
     }
 
     size_t GetLength() const override {
         return size;
+    }
+
+    void Del(size_t index) override {
+        if (size == 0) throw std::out_of_range("Sequence is empty");
+        this->Del(index);
     }
 
     Sequence<T> *appendImpl(const T &elem) override {
@@ -57,10 +61,11 @@ public:
         return this;
     }
 
-    Sequence<T> *concatImpl(const Sequence<T> *other) override {
+    Sequence<T> *concatImpl(const Sequence<T>* other) override {
         size_t otherLen = other->GetLength();
-        for (size_t i = 0; i < otherLen; ++i) {
-            data->Append(other->Get(i));
+        auto enumerator = other->GetEnumerator();
+        while (enumerator->MoveNext()) {
+            data->Append(enumerator->Current());
         }
         size += otherLen;
         return this;
@@ -78,8 +83,8 @@ public:
         return new MutableListSequence<T>(new LinkedList<T>(*sublist), sublist->GetSize());
     }
 
-    IEnumerator<T> *GetEnumerator() override {
-        return new LinkedListEnumerator<T>(this->data);
+    IEnumerator<T>* GetEnumerator()const override {
+        return data->GetEnumerator();
     }
 
 protected:

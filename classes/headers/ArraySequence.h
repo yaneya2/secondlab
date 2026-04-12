@@ -3,6 +3,7 @@
 
 #include "Sequence.h"
 #include "DynamicArray.h"
+#include "cmath"
 
 template<typename T>
 class MutableArraySequence;
@@ -28,7 +29,7 @@ public:
         return data->Get(size - 1);
     }
 
-    T Get(size_t index) const override {
+    T Get(size_t index) const override{
         if (index >= size) throw std::out_of_range("Index out of range");
         return data->Get(index);
     }
@@ -37,8 +38,17 @@ public:
         return size;
     }
 
+    void Del(size_t index) override {
+        if (index >= size) throw std::out_of_range("Index out of range");
+        for (size_t i = index; i < size - 1; i++) {
+            data->Set(i,data->Get(i + 1));
+        }
+        size--;
+        ensureReductionCapacity();
+    }
+
     Sequence<T> *appendImpl(const T &elem) override {
-        ensureCapacity();
+        ensureIncreaseCapacity();
         data->Set(size, elem);
         size++;
         return this;
@@ -46,7 +56,7 @@ public:
 
     Sequence<T> *prependImpl(const T &elem) override {
         size_t oldSize = size;
-        ensureCapacity();
+        ensureIncreaseCapacity();
 
         for (int i = static_cast<int>(oldSize) - 1; i >= 0; i--) {
             data->Set(i + 1, data->Get(i));
@@ -59,7 +69,7 @@ public:
 
     Sequence<T> *insertAtImpl(const T &elem, size_t index) override {
         size_t oldSize = size;
-        ensureCapacity();
+        ensureIncreaseCapacity();
 
         for (int i = static_cast<int>(oldSize) - 1; i >= static_cast<int>(index); i--) {
             data->Set(i + 1, data->Get(i));
@@ -70,15 +80,15 @@ public:
         return this;
     }
 
-    Sequence<T> *concatImpl(const Sequence<T> *other) override {
+    Sequence<T> *concatImpl(const Sequence<T>* other) override {
         size_t oldSize = size;
         size_t addSize = other->GetLength();
         data->Resize(addSize + oldSize);
-        for (size_t i = 0; i < addSize; i++) {
-            data->Set(i + oldSize, other->Get(i));
+        auto enumerator = other->GetEnumerator();
+        while (enumerator->MoveNext()) {
+            data->Set(oldSize + addSize, enumerator->Current());
         }
         size = addSize + oldSize;
-
         return this;
     }
 
@@ -98,7 +108,7 @@ public:
         return result;
     }
 
-    IEnumerator<T> *GetEnumerator() override {
+    IEnumerator<T> *GetEnumerator() const override {
         class ArrayEnumerator : public IEnumerator<T> {
         private:
             const DynamicArray<T> *data;
@@ -137,10 +147,17 @@ protected:
 
     ArraySequence(DynamicArray<T> *arr, size_t size) : data(arr), size(size) {}
 
-    void ensureCapacity() {
+    void ensureIncreaseCapacity() {
         size_t currentCap = this->data->GetSize();
         if (this->size < currentCap) return;
         size_t newCap = (currentCap == 0) ? 1 : currentCap * 2;
+        this->data->Resize(newCap);
+    }
+
+    void ensureReductionCapacity() {
+        size_t currentCap = this->data->GetSize();
+        if (2 * this->size > currentCap) return;
+        size_t newCap = ceil(static_cast<double>(currentCap) / 2);
         this->data->Resize(newCap);
     }
 
