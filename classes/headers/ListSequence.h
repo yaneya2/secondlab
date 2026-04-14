@@ -28,18 +28,20 @@ public:
         return data->GetLast();
     }
 
-    T Get(size_t index) const override {
-        if (size == 0) throw std::out_of_range("Sequence is empty");
-        return data->Get(index);
-    }
+    // T Get(size_t index) const override {
+    //     if (size == 0) throw std::out_of_range("Sequence is empty");
+    //     return data->Get(index);
+    // }
 
     size_t GetLength() const override {
         return size;
     }
 
-    void Del(size_t index) override {
+    Sequence<T>* delImpl(size_t index) override {
         if (size == 0) throw std::out_of_range("Sequence is empty");
         this->Del(index);
+        --size;
+        return this;
     }
 
     Sequence<T> *appendImpl(const T &elem) override {

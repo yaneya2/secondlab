@@ -14,17 +14,15 @@
 
 using namespace std;
 
-// ----------------------------------------------------------------------
-// Вспомогательные функции
-// ----------------------------------------------------------------------
 void printSequence(Sequence<DataType> *seq) {
     if (!seq) {
         cout << "Нет последовательности!" << endl;
         return;
     }
     cout << "Последовательность (длина " << seq->GetLength() << "): ";
-    for (size_t i = 0; i < seq->GetLength(); ++i) {
-        cout << seq->Get(i) << " ";
+    auto enumerator = seq->GetEnumerator();
+    while (enumerator->MoveNext()) {
+        cout << enumerator->Current() << " ";
     }
     cout << endl;
 }
@@ -35,7 +33,7 @@ void printMenu() {
     cout << "2. Append (добавить в конец)" << endl;
     cout << "3. Prepend (добавить в начало)" << endl;
     cout << "4. InsertAt (вставить по индексу)" << endl;
-    cout << "5. Get (получить элемент по индексу)" << endl;
+    cout << "5. Del (удалить элемент по индексу)" << endl;
     cout << "6. GetFirst / GetLast" << endl;
     cout << "7. GetSubsequence (получить подпоследовательность)" << endl;
     cout << "8. Concat (сцепить с другой последовательностью)" << endl;
@@ -49,7 +47,6 @@ void printMenu() {
     cout << "Ваш выбор: ";
 }
 
-// Функция для ввода целого числа с проверкой
 int inputInt(const string &prompt) {
     int val;
     cout << prompt;
@@ -68,7 +65,6 @@ size_t inputSize(const string &prompt) {
     return static_cast<size_t>(val);
 }
 
-// Ввод массива элементов
 vector<DataType> inputArray() {
     size_t n = inputSize("Введите количество элементов: ");
     vector<DataType> arr;
@@ -81,7 +77,6 @@ vector<DataType> inputArray() {
     return arr;
 }
 
-// Создание последовательности на основе выбора пользователя
 Sequence<DataType> *createSequence() {
     cout << "\nВыберите тип последовательности:" << endl;
     cout << "1. MutableArraySequence" << endl;
@@ -116,7 +111,6 @@ Sequence<DataType> *createSequence() {
     }
 }
 
-// Функция для демонстрации итератора
 void testIterator(Sequence<DataType> *seq) {
     if (!seq) {
         cout << "Нет последовательности!" << endl;
@@ -131,7 +125,6 @@ void testIterator(Sequence<DataType> *seq) {
     delete it;
 }
 
-// Примеры функций для Map и Where
 DataType square(DataType x) { return x * x; }
 DataType addOne(DataType x) { return x + 1; }
 bool isEven(DataType x) { return x % 2 == 0; }
@@ -140,7 +133,6 @@ DataType sum(DataType a, DataType b) { return a + b; }
 DataType product(DataType a, DataType b) { return a * b; }
 
 void processCurrentSequence(Sequence<DataType> *&seq) {
-    // system("chcp 65001");
     if (!seq) {
         cout << "Сначала создайте последовательность (пункт 14)." << endl;
         return;
@@ -151,17 +143,15 @@ void processCurrentSequence(Sequence<DataType> *&seq) {
         printMenu();
         choice = inputInt("");
         switch (choice) {
-            case 1: // Вывести
+            case 1:
                 printSequence(seq);
                 break;
-            case 2: // Append
-            {
+            case 2: {
                 DataType val;
                 cout << "Введите значение: ";
                 cin >> val;
                 Sequence<DataType> *newSeq = seq->Append(val);
                 if (newSeq != seq) {
-                    // Для immutable: нужно заменить текущий указатель
                     delete seq;
                     seq = newSeq;
                     cout << "Создана новая последовательность (immutable)." << endl;
@@ -171,8 +161,7 @@ void processCurrentSequence(Sequence<DataType> *&seq) {
                 printSequence(seq);
                 break;
             }
-            case 3: // Prepend
-            {
+            case 3: {
                 DataType val;
                 cout << "Введите значение: ";
                 cin >> val;
@@ -187,8 +176,7 @@ void processCurrentSequence(Sequence<DataType> *&seq) {
                 printSequence(seq);
                 break;
             }
-            case 4: // InsertAt
-            {
+            case 4: {
                 DataType val;
                 size_t idx;
                 cout << "Введите значение: ";
@@ -209,19 +197,26 @@ void processCurrentSequence(Sequence<DataType> *&seq) {
                 }
                 break;
             }
-            case 5: // Get
-            {
-                size_t idx = inputSize("Введите индекс: ");
+            case 5: {
+                DataType val;
+                size_t idx;
+                idx = inputSize("Введите индекс: ");
                 try {
-                    DataType val = seq->Get(idx);
-                    cout << "Элемент [" << idx << "] = " << val << endl;
+                    Sequence<DataType> *newSeq = seq->Del(idx);
+                    if (newSeq != seq) {
+                        delete seq;
+                        seq = newSeq;
+                        cout << "Создана новая последовательность (immutable)." << endl;
+                    } else {
+                        cout << "Элемент удален (mutable)." << endl;
+                    }
+                    printSequence(seq);
                 } catch (const exception &e) {
                     cout << "Ошибка: " << e.what() << endl;
                 }
                 break;
             }
-            case 6: // GetFirst / GetLast
-            {
+            case 6: {
                 try {
                     cout << "GetFirst = " << seq->GetFirst().GetValueOrDefault() << endl;
                     cout << "GetLast  = " << seq->GetLast().GetValueOrDefault() << endl;
@@ -230,8 +225,7 @@ void processCurrentSequence(Sequence<DataType> *&seq) {
                 }
                 break;
             }
-            case 7: // GetSubsequence
-            {
+            case 7: {
                 size_t start = inputSize("Введите начальный индекс: ");
                 size_t end = inputSize("Введите конечный индекс: ");
                 try {
@@ -244,8 +238,7 @@ void processCurrentSequence(Sequence<DataType> *&seq) {
                 }
                 break;
             }
-            case 8: // Concat
-            {
+            case 8: {
                 cout << "Создайте последовательность для сцепления:" << endl;
                 Sequence<DataType> *other = createSequence();
                 if (!other) break;
@@ -261,8 +254,7 @@ void processCurrentSequence(Sequence<DataType> *&seq) {
                 delete other;
                 break;
             }
-            case 9: // Map
-            {
+            case 9: {
                 cout << "Выберите функцию:" << endl;
                 cout << "1. square(x) = x*x" << endl;
                 cout << "2. addOne(x) = x+1" << endl;
@@ -277,8 +269,7 @@ void processCurrentSequence(Sequence<DataType> *&seq) {
                 delete mapped;
                 break;
             }
-            case 10: // Where
-            {
+            case 10: {
                 cout << "Выберите предикат:" << endl;
                 cout << "1. isEven (чётное)" << endl;
                 cout << "2. isPositive (положительное)" << endl;
@@ -293,8 +284,7 @@ void processCurrentSequence(Sequence<DataType> *&seq) {
                 delete filtered;
                 break;
             }
-            case 11: // Reduce
-            {
+            case 11: {
                 cout << "Выберите функцию свёртки:" << endl;
                 cout << "1. sum (сумма)" << endl;
                 cout << "2. product (произведение)" << endl;
@@ -311,8 +301,7 @@ void processCurrentSequence(Sequence<DataType> *&seq) {
                 }
                 break;
             }
-            case 12: // GetFirst / GetLast с предикатом
-            {
+            case 12: {
                 cout << "Выберите предикат:" << endl;
                 cout << "1. isEven" << endl;
                 cout << "2. isPositive" << endl;
@@ -328,11 +317,10 @@ void processCurrentSequence(Sequence<DataType> *&seq) {
                 else cout << "не найден" << endl;
                 break;
             }
-            case 13: // Итератор
+            case 13:
                 testIterator(seq);
                 break;
-            case 14: // Создать новую
-            {
+            case 14: {
                 Sequence<DataType> *newSeq = createSequence();
                 if (newSeq) {
                     delete seq;
