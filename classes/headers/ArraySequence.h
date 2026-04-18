@@ -4,6 +4,7 @@
 #include "Sequence.h"
 #include "DynamicArray.h"
 #include "cmath"
+#include <algorithm>  // для std::min, std::max
 
 template<typename T>
 class MutableArraySequence;
@@ -38,95 +39,89 @@ public:
         return size;
     }
 
+    Sequence<T>* instance() override { return this; }
+
     Sequence<T>* delImpl(size_t index) override {
         if (index >= size) throw std::out_of_range("Index out of range");
         for (size_t i = index; i < size - 1; i++) {
-            data->Set(i,data->Get(i + 1));
+            data->Set(i, data->Get(i + 1));
         }
         size--;
         ensureReductionCapacity();
         return this;
     }
 
-    Sequence<T> *appendImpl(const T &elem) override {
+    Sequence<T>* appendImpl(const T& elem) override {
         ensureIncreaseCapacity();
         data->Set(size, elem);
         size++;
         return this;
     }
 
-    Sequence<T> *prependImpl(const T &elem) override {
+    Sequence<T>* prependImpl(const T& elem) override {
         size_t oldSize = size;
         ensureIncreaseCapacity();
-
         for (int i = static_cast<int>(oldSize) - 1; i >= 0; i--) {
             data->Set(i + 1, data->Get(i));
         }
-
         data->Set(0, elem);
         size++;
         return this;
     }
 
-    Sequence<T> *insertAtImpl(const T &elem, size_t index) override {
+    Sequence<T>* insertAtImpl(const T& elem, size_t index) override {
         size_t oldSize = size;
         ensureIncreaseCapacity();
-
         for (int i = static_cast<int>(oldSize) - 1; i >= static_cast<int>(index); i--) {
             data->Set(i + 1, data->Get(i));
         }
         data->Set(index, elem);
         size++;
-
         return this;
     }
 
-    Sequence<T> *concatImpl(const Sequence<T>* other) override {
+    Sequence<T>* concatImpl(const Sequence<T>& other) override {  // Ссылка!
         size_t oldSize = size;
-        size_t addSize = other->GetLength();
+        size_t addSize = other.GetLength();
         data->Resize(addSize + oldSize);
-        auto enumerator = other->GetEnumerator();
+        auto enumerator = other.GetEnumerator();
+        size_t pos = oldSize;
         while (enumerator->MoveNext()) {
-            data->Set(oldSize + addSize, enumerator->Current());
+            data->Set(pos++, enumerator->Current());
         }
         size = addSize + oldSize;
         return this;
     }
 
-    Sequence<T> *createEmpty() const override {
+    Sequence<T>* createEmpty() const override {
         return new MutableArraySequence<T>();
     }
 
-    Sequence<T> *GetSubsequence(size_t startIndex, size_t endIndex) const override {
-        if (endIndex >= this->size || startIndex > endIndex)
+    Sequence<T>* GetSubsequence(size_t startIndex, size_t endIndex) const override {
+        if (endIndex >= size || startIndex > endIndex)
             throw std::out_of_range("Invalid subsequence bounds");
         size_t newLen = endIndex - startIndex + 1;
-        T *items = new T[newLen];
-        for (size_t i = 0; i < newLen; ++i)
-            items[i] = this->data->Get(startIndex + i);
-        Sequence<T> *result = new MutableArraySequence<T>(items, newLen);
+        T* items = new T[newLen];
+        for (size_t i = 0; i < newLen; ++i) {
+            items[i] = data->Get(startIndex + i);
+        }
+        Sequence<T>* result = new MutableArraySequence<T>(items, newLen);
         delete[] items;
         return result;
     }
 
-    IEnumerator<T> *GetEnumerator() const override {
+    IEnumerator<T>* GetEnumerator() const override {
         class ArrayEnumerator : public IEnumerator<T> {
         private:
-            const DynamicArray<T> *data;
+            const DynamicArray<T>* data;
             size_t index;
             size_t length;
 
         public:
-            ArrayEnumerator(const ArraySequence<T> *s)
-                : data(s->data), index(0), length(s->GetLength()) {
-            }
+            ArrayEnumerator(const ArraySequence<T>* s) : data(s->data), index(0), length(s->size) {}
 
             bool MoveNext() override {
-                if (index < length) {
-                    ++index;
-                    return index <= length;
-                }
-                return false;
+                return ++index <= length;
             }
 
             T Current() const override {
@@ -143,25 +138,24 @@ public:
     }
 
 protected:
-    DynamicArray<T> *data;
+    DynamicArray<T>* data;
     size_t size;
 
-    ArraySequence(DynamicArray<T> *arr, size_t size) : data(arr), size(size) {}
+    ArraySequence(DynamicArray<T>* arr, size_t sz) : data(arr), size(sz) {}
 
     void ensureIncreaseCapacity() {
-        size_t currentCap = this->data->GetSize();
-        if (this->size < currentCap) return;
+        size_t currentCap = data->GetSize();
+        if (size < currentCap) return;
         size_t newCap = (currentCap == 0) ? 1 : currentCap * 2;
-        this->data->Resize(newCap);
+        data->Resize(newCap);
     }
 
     void ensureReductionCapacity() {
-        size_t currentCap = this->data->GetSize();
-        if (2 * this->size > currentCap) return;
-        size_t newCap = ceil(static_cast<double>(currentCap) / 2);
-        this->data->Resize(newCap);
+        size_t currentCap = data->GetSize();
+        if (2 * size > currentCap) return;
+        size_t newCap = std::max(static_cast<size_t>(1), static_cast<size_t>(ceil(static_cast<double>(currentCap) / 2)));
+        data->Resize(newCap);
     }
-
 };
 
 #endif // ARRAYSEQUENCE_H

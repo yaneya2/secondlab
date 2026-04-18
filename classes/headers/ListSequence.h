@@ -28,11 +28,6 @@ public:
         return data->GetLast();
     }
 
-    // T Get(size_t index) const override {
-    //     if (size == 0) throw std::out_of_range("Sequence is empty");
-    //     return data->Get(index);
-    // }
-
     size_t GetLength() const override {
         return size;
     }
@@ -63,9 +58,9 @@ public:
         return this;
     }
 
-    Sequence<T> *concatImpl(const Sequence<T>* other) override {
-        size_t otherLen = other->GetLength();
-        auto enumerator = other->GetEnumerator();
+    Sequence<T> *concatImpl(const Sequence<T>& other) override {
+        size_t otherLen = other.GetLength();
+        auto enumerator = other.GetEnumerator();
         while (enumerator->MoveNext()) {
             data->Append(enumerator->Current());
         }

@@ -16,7 +16,7 @@ protected:
     virtual Sequence<T>* appendImpl(const T& elem) = 0;
     virtual Sequence<T>* prependImpl(const T& elem) = 0;
     virtual Sequence<T>* insertAtImpl(const T& elem, size_t index) = 0;
-    virtual Sequence<T>* concatImpl(const Sequence<T>* other) = 0;//чтобы UI нормально работад
+    virtual Sequence<T>* concatImpl(const Sequence<T>& other) = 0;
     virtual Sequence<T>* delImpl(size_t index) = 0;
 
     virtual Sequence<T>* createEmpty() const = 0;
@@ -25,7 +25,6 @@ public:
     virtual T GetFirst() const = 0;
     virtual T GetLast() const = 0;
     virtual size_t GetLength() const = 0;
-
 
     virtual Sequence<T>* GetSubsequence(size_t startIndex, size_t endIndex) const = 0;
     virtual IEnumerator<T>* GetEnumerator() const = 0;
@@ -39,7 +38,7 @@ public:
     Sequence<T>* InsertAt(const T& elem, size_t index) {
         return instance()->insertAtImpl(elem, index);
     }
-    Sequence<T>* Concat(const Sequence<T>* list) {
+    Sequence<T>* Concat(const Sequence<T>& list) {
         return instance()->concatImpl(list);
     }
     Sequence<T>* Del(size_t index) {
@@ -47,7 +46,7 @@ public:
     }
 
     template<typename T2>
-    Sequence<T>* Map(T2 (*func)(T)) {
+    Sequence<T>* Map(T2 (&func)(T)) {
         Sequence<T>* result = createEmpty();
         auto enumerator = this->GetEnumerator();
         while (enumerator->MoveNext()) {
@@ -56,7 +55,7 @@ public:
         return result;
     }
 
-    Sequence<T>* Where(bool (*func)(T)) {
+    Sequence<T>* Where(bool (&func)(T)) {
         Sequence<T>* result = createEmpty();
         auto enumerator = this->GetEnumerator();
         while (enumerator->MoveNext()) {
@@ -68,7 +67,7 @@ public:
     }
 
     template<typename T2>
-    T Reduce(T2 (*func)(T2, T)) {
+    T Reduce(T2 (&func)(T2, T)) {
         size_t len = GetLength();
         if (len == 0)
             throw std::out_of_range("Cannot reduce empty sequence");
@@ -81,12 +80,7 @@ public:
         return acc;
     }
 
-    Option<T> GetFirst(bool (*func)(T) = nullptr) {
-        size_t len = GetLength();
-        if (func == nullptr) {
-            if (len == 0) return Option<T>();
-            return Option<T>(GetFirst());
-        }
+    Option<T> GetFirst(bool (&func)(T)) {
         auto enumerator = this->GetEnumerator();
         while (enumerator->MoveNext()) {
             T elem = enumerator->Current();
@@ -95,12 +89,7 @@ public:
         return Option<T>();
     }
 
-    Option<T> GetLast(bool (*func)(T) = nullptr) {
-        size_t len = GetLength();
-        if (func == nullptr) {
-            if (len == 0) return Option<T>();
-            return Option<T>(GetLast());
-        }
+    Option<T> GetLast(bool (&func)(T)) {
         auto enumerator = this->GetEnumerator();
         while (enumerator->MoveNext()) {
             T elem = enumerator->Current();
@@ -111,65 +100,53 @@ public:
 
     virtual ~Sequence() = default;
 
-    //еще раз проверить
-    // static Sequence<Sequence<void*>*>* zipN(const Sequence<Sequence<void*>*>* lists) {
-    //     Sequence<Sequence<void*>*>* temp = lists->GetSubsequence(0, 0);
-    //     Sequence<Sequence<void*>*>* result = temp->createEmpty();
-    //     if (lists->GetLength() == 0) {
-    //         delete temp;
-    //         return result;
+    // static Sequence<Sequence<T>*>* zip(const Sequence<Sequence<T>*>& lists) {  // Ссылка!
+    //     if (lists.GetLength() == 0) {  // GetLength() вместо nullptr!
+    //         return lists.createEmpty();
+    //     }
+    //     Sequence<Sequence<T>*>* result = lists.GetSubsequence(0, 0);
+    //
+    //     size_t len_new_lists = lists.GetLength();
+    //     auto enumerator = lists.GetEnumerator();
+    //     enumerator->MoveNext();
+    //     size_t count_new_lists = enumerator->Current()->GetLength();
+    //     while (enumerator->MoveNext()) {
+    //         count_new_lists = std::min(count_new_lists, enumerator->Current()->GetLength());
     //     }
     //
-    //     size_t num_lists = lists->GetLength();
-    //     size_t len = lists->GetFirst()->GetLength();
-    //
-    //     for (size_t i = 1; i < num_lists; i++) {
-    //         size_t current_len = lists->Get(i)->GetLength();
-    //         if (current_len < len) {
-    //             len = current_len;
+    //     for (size_t col = 0; col < count_new_lists; col++) {
+    //         Sequence<T>* temp = lists.GetSubsequence(0, 0);
+    //         auto enumerator_row = lists.GetEnumerator();
+    //         size_t row = 0;
+    //         while (enumerator_row->MoveNext() && row < len_new_lists) {
+    //             T value = lists.Get(row)->Get(col);
+    //             temp = temp->Append(value);
+    //             row++;
     //         }
-    //     }
-    //
-    //     for (size_t col = 0; col < len; col++) {
-    //         Sequence<void*>* column_temp = lists->Get(0)->GetSubsequence(0, 0);
-    //         Sequence<void*>* column = column_temp->createEmpty();
-    //         delete column_temp;
-    //
-    //         for (size_t row = 0; row < num_lists; row++) {
-    //             void* value = lists->Get(row)->Get(col);
-    //             column = column->Append(value);
-    //         }
-    //         result = result->Append(column);
+    //         result = result->Append(temp);
     //     }
     //     return result;
     // }
     //
-    // static Sequence<Sequence<void*>*>* unzip(const Sequence<Sequence<void*>*>* tuples) {
-    //     Sequence<Sequence<void*>*>* temp = tuples->GetSubsequence(0, 0);
-    //     Sequence<Sequence<void*>*>* result = temp->createEmpty();
-    //
-    //     if (tuples->GetLength() == 0) {
-    //         delete temp;
-    //         return result;
+    // static Sequence<Sequence<void*>*>* unzip(const Sequence<Sequence<void*>*>& tuples) {  // Ссылка!
+    //     if (tuples.GetLength() == 0) {
+    //         return tuples.createEmpty();
     //     }
     //
-    //     size_t num_tuples = tuples->GetLength();
+    //     size_t num_tuples = tuples.GetLength();
+    //     size_t num_fields = tuples.GetFirst()->GetLength();  // Используем GetFirst()
     //
-    //     size_t num_fields = tuples->Get(0)->GetLength();
+    //     Sequence<Sequence<void*>*>* result = tuples.createEmpty();
     //
     //     for (size_t field = 0; field < num_fields; field++) {
-    //         Sequence<void*>* column_temp = tuples->Get(0)->GetSubsequence(0, 0);
-    //         Sequence<void*>* column = column_temp->createEmpty();
-    //         delete column_temp;
+    //         Sequence<void*>* column = tuples.GetFirst()->GetSubsequence(0, 0)->createEmpty();
     //
     //         for (size_t tuple_idx = 0; tuple_idx < num_tuples; tuple_idx++) {
-    //             void* value = tuples->Get(tuple_idx)->Get(field);
+    //             void* value = tuples.Get(tuple_idx)->Get(field);
     //             column = column->Append(value);
     //         }
     //         result = result->Append(column);
     //     }
-    //
-    //     delete temp;
     //     return result;
     // }
 };

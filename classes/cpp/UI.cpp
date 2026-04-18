@@ -218,8 +218,8 @@ void processCurrentSequence(Sequence<DataType> *&seq) {
             }
             case 6: {
                 try {
-                    cout << "GetFirst = " << seq->GetFirst().GetValueOrDefault() << endl;
-                    cout << "GetLast  = " << seq->GetLast().GetValueOrDefault() << endl;
+                    cout << "GetFirst = " << seq->GetFirst() << endl;
+                    cout << "GetLast  = " << seq->GetLast() << endl;
                 } catch (const exception &e) {
                     cout << "Ошибка: " << e.what() << endl;
                 }
@@ -242,7 +242,7 @@ void processCurrentSequence(Sequence<DataType> *&seq) {
                 cout << "Создайте последовательность для сцепления:" << endl;
                 Sequence<DataType> *other = createSequence();
                 if (!other) break;
-                Sequence<DataType> *newSeq = seq->Concat(other);
+                Sequence<DataType> *newSeq = seq->Concat(*other);
                 if (newSeq != seq) {
                     delete seq;
                     seq = newSeq;
@@ -307,8 +307,8 @@ void processCurrentSequence(Sequence<DataType> *&seq) {
                 cout << "2. isPositive" << endl;
                 int predChoice = inputInt("Ваш выбор: ");
                 bool (*pred)(DataType) = (predChoice == 1) ? isEven : isPositive;
-                Option<DataType> first = seq->GetFirst(pred);
-                Option<DataType> last = seq->GetLast(pred);
+                Option<DataType> first = seq->GetFirst(*pred);
+                Option<DataType> last = seq->GetLast(*pred);
                 cout << "Первый элемент, удовлетворяющий условию: ";
                 if (first.HasValue()) cout << first.GetValue() << endl;
                 else cout << "не найден" << endl;
@@ -341,7 +341,7 @@ void processCurrentSequence(Sequence<DataType> *&seq) {
 
 void runUI() {
     cout << "=== Демонстрация работы Sequence (ArraySequence / ListSequence) ===\n";
-    Sequence<DataType> *current = nullptr;
+    Sequence<DataType>* current;
     int mainChoice;
     do {
         cout << "\nГлавное меню:" << endl;
@@ -351,7 +351,7 @@ void runUI() {
         mainChoice = inputInt("Ваш выбор: ");
         switch (mainChoice) {
             case 1:
-                if (current) delete current;
+                delete current;
                 current = createSequence();
                 if (current) {
                     cout << "Последовательность создана." << endl;
