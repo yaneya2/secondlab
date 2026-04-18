@@ -5,15 +5,11 @@
 #include <functional>
 #include <gtest/gtest.h>
 
-// ============================================================================
-// Вспомогательные функции для тестов
-// ============================================================================
 int square(int x) { return x * x; }
 bool isEven(int x) { return x % 2 == 0; }
 int sumAcc(int acc, int x) { return acc + x; }
-bool isGreaterThan10(int x) { return x > 10; } // ✅ Заменяет проблемную лямбду
+bool isGreaterThan10(int x) { return x > 10; }
 
-// Хелпер для получения элемента по индексу через GetEnumerator
 int GetAt(Sequence<int> *seq, size_t index) {
     auto en = seq->GetEnumerator();
     for (size_t i = 0; i <= index; ++i) {
@@ -27,9 +23,6 @@ int GetAt(Sequence<int> *seq, size_t index) {
     return val;
 }
 
-// ============================================================================
-// MutableArraySequence
-// ============================================================================
 TEST(MutableArraySequence, GetLength) {
     MutableArraySequence<int> seq;
     seq.Append(1)->Append(2)->Append(3);
@@ -67,7 +60,7 @@ TEST(MutableArraySequence, GetEnumerator) {
 TEST(MutableArraySequence, GetSubsequence) {
     MutableArraySequence<int> seq;
     seq.Append(1)->Append(2)->Append(3)->Append(4);
-    auto sub = seq.GetSubsequence(1, 2); // start=1, count=2 → [2,3]
+    auto sub = seq.GetSubsequence(1, 2);
     EXPECT_EQ(sub->GetLength(), 2);
     EXPECT_EQ(GetAt(sub, 0), 2);
     EXPECT_EQ(GetAt(sub, 1), 3);
@@ -151,19 +144,16 @@ TEST(MutableArraySequence, GetFirstPredicate) {
     seq.Append(1)->Append(3)->Append(4)->Append(5);
     EXPECT_TRUE(seq.GetFirstP(isEven).HasValue());
     EXPECT_EQ(seq.GetFirstP(isEven).GetValue(), 4);
-    EXPECT_FALSE(seq.GetFirstP(isGreaterThan10).HasValue()); // ✅ Исправлено
+    EXPECT_FALSE(seq.GetFirstP(isGreaterThan10).HasValue());
 }
 
 TEST(MutableArraySequence, GetLastPredicate) {
     MutableArraySequence<int> seq;
     seq.Append(1)->Append(4)->Append(6)->Append(3);
     EXPECT_EQ(seq.GetLastP(isEven).GetValue(), 6);
-    EXPECT_FALSE(seq.GetLastP(isGreaterThan10).HasValue()); // ✅ Исправлено
+    EXPECT_FALSE(seq.GetLastP(isGreaterThan10).HasValue());
 }
 
-// ============================================================================
-// ImmutableArraySequence
-// ============================================================================
 TEST(ImmutableArraySequence, GetLength) {
     int arr[] = {1, 2, 3};
     ImmutableArraySequence<int> seq(arr, 3);
@@ -203,9 +193,9 @@ TEST(ImmutableArraySequence, GetSubsequence) {
 }
 
 TEST(ImmutableArraySequence, Append) {
-    ImmutableArraySequence<int> seq; // Требуется дефолтный конструктор
+    ImmutableArraySequence<int> seq;
     auto res = seq.Append(1)->Append(2);
-    EXPECT_EQ(seq.GetLength(), 0); // Оригинал не изменился
+    EXPECT_EQ(seq.GetLength(), 0);
     EXPECT_EQ(res->GetLength(), 2);
     EXPECT_EQ(GetAt(res, 0), 1);
     EXPECT_EQ(GetAt(res, 1), 2);
@@ -216,7 +206,7 @@ TEST(ImmutableArraySequence, Prepend) {
     int arr[] = {2, 3};
     auto seq = new ImmutableArraySequence<int>(arr, 2);
     auto res = seq->Prepend(1);
-    EXPECT_EQ(seq->GetLength(), 2); // Оригинал не изменился
+    EXPECT_EQ(seq->GetLength(), 2);
     EXPECT_EQ(res->GetLength(), 3);
     EXPECT_EQ(GetAt(res, 0), 1);
     delete seq;
@@ -300,9 +290,6 @@ TEST(ImmutableArraySequence, GetLastPredicate) {
     delete seq;
 }
 
-// ============================================================================
-// MutableListSequence
-// ============================================================================
 TEST(MutableListSequence, GetLength) {
     MutableListSequence<int> seq;
     seq.Append(1)->Append(2)->Append(3);
@@ -417,9 +404,6 @@ TEST(MutableListSequence, GetLastPredicate) {
     EXPECT_EQ(seq.GetLastP(isEven).GetValue(), 6);
 }
 
-// ============================================================================
-// ImmutableListSequence
-// ============================================================================
 TEST(ImmutableListSequence, GetLength) {
     int arr[] = {1, 2, 3};
     ImmutableListSequence<int> seq(arr, 3);
