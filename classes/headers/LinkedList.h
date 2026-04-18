@@ -252,11 +252,11 @@ public:
         return newList;
     }
 
-    LinkedList<T> *Concat(const LinkedList<T> &list) const {
+    LinkedList<T> *Concat(const LinkedList<T> &list){
         if (list.size == 0) {
             return this;
         }
-        LinkedList<T> newList = new LinkedList<T>(*this);
+        LinkedList<T>* newList = new LinkedList<T>(*this);
         Node* current = list.head;
         for (size_t i = 0; i < list.size; i++) {
             newList->Append(current->data);

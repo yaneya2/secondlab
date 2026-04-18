@@ -80,7 +80,7 @@ public:
         return acc;
     }
 
-    Option<T> GetFirst(bool (&func)(T)) {
+    Option<T> GetFirstP(bool (&func)(T)) {
         auto enumerator = this->GetEnumerator();
         while (enumerator->MoveNext()) {
             T elem = enumerator->Current();
@@ -89,12 +89,19 @@ public:
         return Option<T>();
     }
 
-    Option<T> GetLast(bool (&func)(T)) {
+    Option<T> GetLastP(bool (&func)(T)) {
         auto enumerator = this->GetEnumerator();
+        T res{};
+        bool flag = false;
         while (enumerator->MoveNext()) {
             T elem = enumerator->Current();
-            if (func(elem)) return Option<T>(elem);
+            if (func(elem)) {
+                res = elem;
+                flag = true;
+            }
         }
+        if (flag)
+            return Option<T>(res);
         return Option<T>();
     }
 

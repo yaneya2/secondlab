@@ -34,7 +34,7 @@ public:
 
     Sequence<T>* delImpl(size_t index) override {
         if (size == 0) throw std::out_of_range("Sequence is empty");
-        this->Del(index);
+        data->Del(index);
         --size;
         return this;
     }
@@ -53,7 +53,7 @@ public:
 
     Sequence<T> *insertAtImpl(const T &elem, size_t index) override {
         if (index > size) throw std::out_of_range("Index out of range");
-        data->InsertAt(elem, index);
+        data->InsertAt(index, elem);
         ++size;
         return this;
     }

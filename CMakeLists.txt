@@ -3,6 +3,8 @@ project(secondlab)
 
 set(CMAKE_CXX_STANDARD 20)
 
+add_subdirectory(googletest)
+
 add_executable(secondlab main.cpp
         classes/headers/Sequence.h
         classes/headers/ArraySequence.h
@@ -17,12 +19,16 @@ add_executable(secondlab main.cpp
         classes/headers/IEnumerator.h
         classes/headers/MutableArraySequence.h
         classes/headers/ImmutableListSequence.h
-        classes/headers/LinkedListEnumerator.h
         classes/headers/UI.h
         classes/cpp/UI.cpp
         classes/cpp/BItSequence.cpp
         classes/headers/дописать/BItSequence.h
-        classes/cpp/tests.cpp
-        classes/headers/дописать/tests.h
-        classes/headers/дописать/tests.h
+
 )
+add_executable(tests
+        tests/testsDynamicArray.cpp
+        tests/testsLinkedList.cpp
+        tests/testsSequence.cpp
+)
+
+target_link_libraries(tests PRIVATE GTest::gtest_main)

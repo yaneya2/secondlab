@@ -307,8 +307,8 @@ void processCurrentSequence(Sequence<DataType> *&seq) {
                 cout << "2. isPositive" << endl;
                 int predChoice = inputInt("Ваш выбор: ");
                 bool (*pred)(DataType) = (predChoice == 1) ? isEven : isPositive;
-                Option<DataType> first = seq->GetFirst(*pred);
-                Option<DataType> last = seq->GetLast(*pred);
+                Option<DataType> first = seq->GetFirstP(*pred);
+                Option<DataType> last = seq->GetLastP(*pred);
                 cout << "Первый элемент, удовлетворяющий условию: ";
                 if (first.HasValue()) cout << first.GetValue() << endl;
                 else cout << "не найден" << endl;
