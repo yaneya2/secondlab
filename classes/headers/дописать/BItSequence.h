@@ -11,43 +11,97 @@ template<typename T>
 class MutableArraySequence;
 
 class BitSequence : public Sequence<bool> {
-private:
-    DynamicArray<uint8_t>* bytes;
-    size_t bitSize;
-
-    BitSequence(DynamicArray<uint8_t>* b, size_t bits);
-    uint8_t getByte(size_t byteIdx) const;
-    void setByte(size_t byteIdx, uint8_t val);
-    bool getBit(size_t bitIdx) const;
-    BitSequence* setBit(size_t bitIdx, bool value);
-    size_t numBytes() const;
-    BitSequence* createCopy() const;
-
-    BitSequence* createEmpty() const override;
-    BitSequence* instance() override;
-
 public:
-    BitSequence(const bool* bits, size_t numBits);
-    BitSequence(const char* bitStr);
+    BitSequence(const bool *bits, size_t numBits);
+
+    BitSequence(DynamicArray<uint8_t> *b, size_t bits);
+
+    BitSequence(const char *bitStr);
+
+    size_t GetLength() const override;
+
+    BitSequence *GetSubsequence(size_t startIndex, size_t endIndex) const override;
+
+    IEnumerator<bool> *GetEnumerator() const override;
+
+    BitSequence *And(const BitSequence &other) const;
+
+    BitSequence *Or(const BitSequence &other) const;
+
+    BitSequence *Xor(const BitSequence &other) const;
+
+    BitSequence *Not() const;
 
     bool GetFirst() const override;
+
     bool GetLast() const override;
-    bool Get(size_t index) const override;
-    size_t GetLength() const override;
-    BitSequence* GetSubsequence(size_t startIndex, size_t endIndex) const override;
-    IEnumerator<bool>* GetEnumerator() override;
 
-    BitSequence* And(const BitSequence* other) const;
-    BitSequence* Or(const BitSequence* other) const;
-    BitSequence* Xor(const BitSequence* other) const;
-    BitSequence* Not() const;
+    uint8_t getByte(size_t byteIdx) const;
 
-    BitSequence* appendImpl(const bool& elem) override;
-    BitSequence* prependImpl(const bool& elem) override;
-    BitSequence* insertAtImpl(const bool& elem, size_t index) override;
-    BitSequence* concatImpl(const Sequence<bool>* other) override;
+    void setByte(size_t byteIdx, uint8_t val);
+
+    bool getBit(size_t bitIdx) const;
+
+    BitSequence *setBit(size_t bitIdx, bool value);
+
+    BitSequence *createEmpty() const override;
+
+    std::string toDecimalString() const;
 
     ~BitSequence() override;
+
+protected:
+    BitSequence *delImpl(size_t index) override;
+
+    BitSequence *appendImpl(const bool &elem) override;
+
+    BitSequence *prependImpl(const bool &elem) override;
+
+    BitSequence *insertAtImpl(const bool &elem, size_t index) override;
+
+    BitSequence *concatImpl(const Sequence<bool> &other) override;
+
+    BitSequence *instance() override;
+
+
+    class BitEnumerator : public IEnumerator<bool> {
+    private:
+        const BitSequence *seq;
+        size_t currentIdx;
+
+    public:
+        explicit BitEnumerator(const BitSequence *s) : seq(s), currentIdx(0) {
+        }
+
+        bool MoveNext() override {
+            if (currentIdx < seq->GetLength()) {
+                ++currentIdx;
+                return true;
+            }
+            return false;
+        }
+
+        bool Current() const override {
+            if (currentIdx == 0 || currentIdx > seq->GetLength())
+                throw std::out_of_range("BitEnumerator: invalid access");
+            return seq->getBit(currentIdx - 1);
+        }
+
+        void Reset() override {
+            currentIdx = 0;
+        }
+
+        ~BitEnumerator() override = default;
+    };
+
+private:
+    DynamicArray<uint8_t> *bytes;
+    size_t bitSize;
+
+    void ensureReductionCapacity();
+
+    void ensureIncreaseCapacity();
+
 };
 
 #endif
