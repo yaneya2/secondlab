@@ -3,9 +3,9 @@
 
 #include <cstdint>
 #include <stdexcept>
-#include "../Sequence.h"
-#include "../DynamicArray.h"
-#include "../IEnumerator.h"
+#include "Sequence.h"
+#include "DynamicArray.h"
+#include "IEnumerator.h"
 
 template<typename T>
 class MutableArraySequence;

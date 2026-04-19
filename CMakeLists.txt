@@ -22,7 +22,7 @@ add_executable(secondlab main.cpp
         classes/headers/UI.h
         classes/cpp/UI.cpp
         classes/cpp/BItSequence.cpp
-        classes/headers/дописать/BItSequence.h
+        classes/headers/BItSequence.h
 
 )
 add_executable(tests

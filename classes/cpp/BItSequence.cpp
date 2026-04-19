@@ -1,4 +1,4 @@
-#include "../headers/дописать/BItSequence.h"
+#include "../headers/BItSequence.h"
 #include "../headers/DynamicArray.h"
 #include "../headers/Sequence.h"
 #include <algorithm>

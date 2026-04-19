@@ -4,6 +4,8 @@
 #include <stdexcept>
 #include "Option.h"
 #include "IEnumerator.h"
+#include <vector>
+#include <limits>
 
 template<typename T>
 class MutableArraySequence;
@@ -11,43 +13,54 @@ class MutableArraySequence;
 template<typename T>
 class Sequence {
 protected:
-    virtual Sequence<T>* instance() = 0;
+    virtual Sequence<T> *instance() = 0;
 
-    virtual Sequence<T>* appendImpl(const T& elem) = 0;
-    virtual Sequence<T>* prependImpl(const T& elem) = 0;
-    virtual Sequence<T>* insertAtImpl(const T& elem, size_t index) = 0;
-    virtual Sequence<T>* concatImpl(const Sequence<T>& other) = 0;
-    virtual Sequence<T>* delImpl(size_t index) = 0;
+    virtual Sequence<T> *appendImpl(const T &elem) = 0;
 
-    virtual Sequence<T>* createEmpty() const = 0;
+    virtual Sequence<T> *prependImpl(const T &elem) = 0;
+
+    virtual Sequence<T> *insertAtImpl(const T &elem, size_t index) = 0;
+
+    virtual Sequence<T> *concatImpl(const Sequence<T> &other) = 0;
+
+    virtual Sequence<T> *delImpl(size_t index) = 0;
+
+    virtual Sequence<T> *createEmpty() const = 0;
 
 public:
     virtual T GetFirst() const = 0;
+
     virtual T GetLast() const = 0;
+
     virtual size_t GetLength() const = 0;
 
-    virtual Sequence<T>* GetSubsequence(size_t startIndex, size_t endIndex) const = 0;
-    virtual IEnumerator<T>* GetEnumerator() const = 0;
+    virtual Sequence<T> *GetSubsequence(size_t startIndex, size_t endIndex) const = 0;
 
-    Sequence<T>* Append(const T& elem) {
+    virtual IEnumerator<T> *GetEnumerator() const = 0;
+
+    Sequence<T> *Append(const T &elem) {
         return instance()->appendImpl(elem);
     }
-    Sequence<T>* Prepend(const T& elem) {
+
+    Sequence<T> *Prepend(const T &elem) {
         return instance()->prependImpl(elem);
     }
-    Sequence<T>* InsertAt(const T& elem, size_t index) {
+
+    Sequence<T> *InsertAt(const T &elem, size_t index) {
         return instance()->insertAtImpl(elem, index);
     }
-    Sequence<T>* Concat(const Sequence<T>& list) {
+
+    Sequence<T> *Concat(const Sequence<T> &list) {
         return instance()->concatImpl(list);
     }
-    Sequence<T>* Del(size_t index) {
+
+    Sequence<T> *Del(size_t index) {
         return instance()->delImpl(index);
     }
 
     template<typename T2>
-    Sequence<T>* Map(T2 (&func)(T)) {
-        Sequence<T>* result = createEmpty();
+    Sequence<T> *Map(T2 (&func)(T)) {
+        Sequence<T> *result = createEmpty();
         auto enumerator = this->GetEnumerator();
         while (enumerator->MoveNext()) {
             result = result->Append(func(enumerator->Current()));
@@ -55,8 +68,8 @@ public:
         return result;
     }
 
-    Sequence<T>* Where(bool (&func)(T)) {
-        Sequence<T>* result = createEmpty();
+    Sequence<T> *Where(bool (&func)(T)) {
+        Sequence<T> *result = createEmpty();
         auto enumerator = this->GetEnumerator();
         while (enumerator->MoveNext()) {
             if (func(enumerator->Current())) {
@@ -105,57 +118,232 @@ public:
         return Option<T>();
     }
 
-    virtual ~Sequence() = default;
+    static Sequence<Sequence<T> *> *Zip(const Sequence<Sequence<T> *> &outerSequence) {
+        size_t outerLength = outerSequence.GetLength();
+        if (outerLength == 0) {
+            return new MutableArraySequence<Sequence<T> *>();
+        }
 
-    // static Sequence<Sequence<T>*>* zip(const Sequence<Sequence<T>*>& lists) {  // Ссылка!
-    //     if (lists.GetLength() == 0) {  // GetLength() вместо nullptr!
-    //         return lists.createEmpty();
-    //     }
-    //     Sequence<Sequence<T>*>* result = lists.GetSubsequence(0, 0);
-    //
-    //     size_t len_new_lists = lists.GetLength();
-    //     auto enumerator = lists.GetEnumerator();
-    //     enumerator->MoveNext();
-    //     size_t count_new_lists = enumerator->Current()->GetLength();
-    //     while (enumerator->MoveNext()) {
-    //         count_new_lists = std::min(count_new_lists, enumerator->Current()->GetLength());
-    //     }
-    //
-    //     for (size_t col = 0; col < count_new_lists; col++) {
-    //         Sequence<T>* temp = lists.GetSubsequence(0, 0);
-    //         auto enumerator_row = lists.GetEnumerator();
-    //         size_t row = 0;
-    //         while (enumerator_row->MoveNext() && row < len_new_lists) {
-    //             T value = lists.Get(row)->Get(col);
-    //             temp = temp->Append(value);
-    //             row++;
-    //         }
-    //         result = result->Append(temp);
-    //     }
-    //     return result;
-    // }
-    //
-    // static Sequence<Sequence<void*>*>* unzip(const Sequence<Sequence<void*>*>& tuples) {  // Ссылка!
-    //     if (tuples.GetLength() == 0) {
-    //         return tuples.createEmpty();
-    //     }
-    //
-    //     size_t num_tuples = tuples.GetLength();
-    //     size_t num_fields = tuples.GetFirst()->GetLength();  // Используем GetFirst()
-    //
-    //     Sequence<Sequence<void*>*>* result = tuples.createEmpty();
-    //
-    //     for (size_t field = 0; field < num_fields; field++) {
-    //         Sequence<void*>* column = tuples.GetFirst()->GetSubsequence(0, 0)->createEmpty();
-    //
-    //         for (size_t tuple_idx = 0; tuple_idx < num_tuples; tuple_idx++) {
-    //             void* value = tuples.Get(tuple_idx)->Get(field);
-    //             column = column->Append(value);
-    //         }
-    //         result = result->Append(column);
-    //     }
-    //     return result;
-    // }
+        size_t minLength = std::numeric_limits<size_t>::max();
+        auto *outerEnumerator = outerSequence.GetEnumerator();
+        while (outerEnumerator->MoveNext()) {
+            Sequence<T> *innerSequence = outerEnumerator->Current();
+            if (innerSequence->GetLength() < minLength) {
+                minLength = innerSequence->GetLength();
+            }
+        }
+        delete outerEnumerator;
+
+        if (minLength == 0) {
+            return new MutableArraySequence<Sequence<T> *>();
+        }
+
+        std::vector<IEnumerator<T> *> innerEnumerators(outerLength);
+        {
+            size_t sourceIdx = 0;
+            auto *tempOuterEnumerator = outerSequence.GetEnumerator();
+            while (tempOuterEnumerator->MoveNext()) {
+                innerEnumerators[sourceIdx++] = tempOuterEnumerator->Current()->GetEnumerator();
+            }
+            delete tempOuterEnumerator;
+        }
+
+        Sequence<Sequence<T> *> *result = new MutableArraySequence<Sequence<T> *>();
+        for (size_t targetIdx = 0; targetIdx < minLength; ++targetIdx) {
+            Sequence<T> *targetSequence = new MutableArraySequence<T>();
+            for (size_t sourceIdx = 0; sourceIdx < outerLength; ++sourceIdx) {
+                innerEnumerators[sourceIdx]->MoveNext();
+                targetSequence = targetSequence->Append(innerEnumerators[sourceIdx]->Current());
+            }
+            result = result->Append(targetSequence);
+        }
+
+        for (auto *enumerator: innerEnumerators) {
+            delete enumerator;
+        }
+
+        return result;
+    }
+
+    static Sequence<Sequence<T> *> *Unzip(const Sequence<Sequence<T> *> &outerSequence) {
+        size_t outerLength = outerSequence.GetLength();
+        if (outerLength == 0) {
+            return new MutableArraySequence<Sequence<T> *>();
+        }
+
+        size_t minLength = std::numeric_limits<size_t>::max();
+        auto *outerEnumerator = outerSequence.GetEnumerator();
+        while (outerEnumerator->MoveNext()) {
+            Sequence<T> *innerSequence = outerEnumerator->Current();
+            if (innerSequence->GetLength() < minLength) {
+                minLength = innerSequence->GetLength();
+            }
+        }
+        delete outerEnumerator;
+
+        if (minLength == 0) {
+            return new MutableArraySequence<Sequence<T> *>();
+        }
+
+        std::vector<IEnumerator<T> *> innerEnumerators(outerLength);
+        {
+            size_t sourceIdx = 0;
+            auto *tempOuterEnumerator = outerSequence.GetEnumerator();
+            while (tempOuterEnumerator->MoveNext()) {
+                innerEnumerators[sourceIdx++] = tempOuterEnumerator->Current()->GetEnumerator();
+            }
+            delete tempOuterEnumerator;
+        }
+
+        Sequence<Sequence<T> *> *result = new MutableArraySequence<Sequence<T> *>();
+        for (size_t targetIdx = 0; targetIdx < minLength; ++targetIdx) {
+            Sequence<T> *targetSequence = new MutableArraySequence<T>();
+            for (size_t sourceIdx = 0; sourceIdx < outerLength; ++sourceIdx) {
+                innerEnumerators[sourceIdx]->MoveNext();
+                targetSequence = targetSequence->Append(innerEnumerators[sourceIdx]->Current());
+            }
+            result = result->Append(targetSequence);
+        }
+
+        for (auto *enumerator: innerEnumerators) {
+            delete enumerator;
+        }
+
+        return result;
+    }
+
+    Sequence<T> *Skip(size_t skipCount) const {
+        if (skipCount >= GetLength()) {
+            return createEmpty();
+        }
+
+        Sequence<T> *result = new MutableArraySequence<T>();
+        auto *enumerator = GetEnumerator();
+        size_t skippedCount = 0;
+
+        while (enumerator->MoveNext()) {
+            if (skippedCount < skipCount) {
+                ++skippedCount;
+            } else {
+                result = result->Append(enumerator->Current());
+            }
+        }
+
+        delete enumerator;
+        return result;
+    }
+
+    Sequence<Sequence<T> *> *Split(const T &delimiter) const {
+        Sequence<Sequence<T> *> *result = new MutableArraySequence<Sequence<T> *>();
+        Sequence<T> *currentSequence = new MutableArraySequence<T>();
+
+        auto *enumerator = GetEnumerator();
+        while (enumerator->MoveNext()) {
+            T element = enumerator->Current();
+
+            if (element == delimiter) {
+                result = result->Append(currentSequence);
+                delete currentSequence;
+                currentSequence = new MutableArraySequence<T>();
+            } else {
+                currentSequence = currentSequence->Append(element);
+            }
+        }
+        delete enumerator;
+
+        if (currentSequence->GetLength() != 0) {
+            result = result->Append(currentSequence);
+        }
+
+        delete currentSequence;
+        return result;
+    }
+
+    Sequence<T> *Splice(size_t startIndex, size_t removeCount, const Sequence<T> &insertSequence) const {
+        size_t originalLength = GetLength();
+        if (startIndex > originalLength) {
+            throw std::out_of_range("Splice: startIndex out of range");
+        }
+
+        if (removeCount > originalLength - startIndex) {
+            removeCount = originalLength - startIndex;
+        }
+
+        Sequence<T> *resultSequence = new MutableArraySequence<T>();
+        auto *originalEnumerator = GetEnumerator();
+        size_t currentIndex = 0;
+
+        while (originalEnumerator->MoveNext() && currentIndex < startIndex) {
+            resultSequence = resultSequence->Append(originalEnumerator->Current());
+            ++currentIndex;
+        }
+
+        if (insertSequence.GetLength() > 0) {
+            auto *insertEnumerator = insertSequence.GetEnumerator();
+            while (insertEnumerator->MoveNext()) {
+                resultSequence = resultSequence->Append(insertEnumerator->Current());
+            }
+            delete insertEnumerator;
+        }
+
+        while (originalEnumerator->MoveNext() && currentIndex < startIndex + removeCount) {
+            ++currentIndex;
+        }
+
+        while (originalEnumerator->MoveNext()) {
+            resultSequence = resultSequence->Append(originalEnumerator->Current());
+        }
+
+        delete originalEnumerator;
+        return resultSequence;
+    }
+
+    template<typename U>
+    Sequence<U> *FlatMap(Sequence<U> * (*transformFunc)(T)) const {
+        Sequence<U> *resultSequence = new MutableArraySequence<U>();
+        auto *enumerator = GetEnumerator();
+
+        while (enumerator->MoveNext()) {
+            Sequence<U> *innerSequence = transformFunc(enumerator->Current());
+
+            if (innerSequence != nullptr) {
+                auto *innerEnumerator = innerSequence->GetEnumerator();
+                while (innerEnumerator->MoveNext()) {
+                    resultSequence = resultSequence->Append(innerEnumerator->Current());
+                }
+                delete innerEnumerator;
+                delete innerSequence;
+            }
+        }
+
+        delete enumerator;
+        return resultSequence;
+    }
+
+    static Sequence<T> *Range(T startValue, T endValue, T stepValue) {
+        if (stepValue == T{}) {
+            throw std::invalid_argument("Range: stepValue cannot be zero");
+        }
+
+        Sequence<T> *resultSequence = new MutableArraySequence<T>();
+        T currentValue = startValue;
+
+        if (stepValue > T{}) {
+            while (currentValue < endValue) {
+                resultSequence = resultSequence->Append(currentValue);
+                currentValue += stepValue;
+            }
+        } else {
+            while (currentValue > endValue) {
+                resultSequence = resultSequence->Append(currentValue);
+                currentValue += stepValue;
+            }
+        }
+
+        return resultSequence;
+    }
+
+    virtual ~Sequence() = default;
 };
 
 #endif
