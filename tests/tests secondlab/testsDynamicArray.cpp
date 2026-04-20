@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <string>
 #include <algorithm>
-#include "../classes/headers/DynamicArray.h"
+#include "../../classes/secondlab/headers/DynamicArray.h"
 
 class DynamicArrayIntTest : public ::testing::Test {
 protected:

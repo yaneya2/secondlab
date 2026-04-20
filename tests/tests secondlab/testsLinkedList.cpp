@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include "../classes/headers/LinkedList.h"
-#include "../classes/headers/IEnumerator.h"
+#include "../../classes/secondlab/headers/LinkedList.h"
+#include "../../classes/secondlab/headers/IEnumerator.h"
 
 TEST(LinkedListTest, GetFirst_ReturnsHeadElement) {
     LinkedList<int> list;

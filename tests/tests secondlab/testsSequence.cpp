@@ -1,7 +1,7 @@
-#include "../classes/headers/MutableArraySequence.h"
-#include "../classes/headers/ImmutableArraySequence.h"
-#include "../classes/headers/MutableListSequence.h"
-#include "../classes/headers/ImmutableListSequence.h"
+#include "../../classes/secondlab/headers/MutableArraySequence.h"
+#include "../../classes/secondlab/headers/ImmutableArraySequence.h"
+#include "../../classes/secondlab/headers/MutableListSequence.h"
+#include "../../classes/secondlab/headers/ImmutableListSequence.h"
 #include <functional>
 #include <gtest/gtest.h>
 
