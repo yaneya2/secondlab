@@ -4,8 +4,10 @@
 #include <stdexcept>
 #include "Option.h"
 #include "IEnumerator.h"
-#include <vector>
 #include <limits>
+#include <tuple>
+
+#include "DynamicArray.h"
 
 template<typename T>
 class MutableArraySequence;
@@ -138,12 +140,12 @@ public:
             return new MutableArraySequence<Sequence<T> *>();
         }
 
-        std::vector<IEnumerator<T> *> innerEnumerators(outerLength);
+        DynamicArray<IEnumerator<T> *> innerEnumerators(outerLength);
         {
             size_t sourceIdx = 0;
             auto *tempOuterEnumerator = outerSequence.GetEnumerator();
             while (tempOuterEnumerator->MoveNext()) {
-                innerEnumerators[sourceIdx++] = tempOuterEnumerator->Current()->GetEnumerator();
+                innerEnumerators.Append(tempOuterEnumerator->Current()->GetEnumerator());
             }
             delete tempOuterEnumerator;
         }
@@ -152,14 +154,15 @@ public:
         for (size_t targetIdx = 0; targetIdx < minLength; ++targetIdx) {
             Sequence<T> *targetSequence = new MutableArraySequence<T>();
             for (size_t sourceIdx = 0; sourceIdx < outerLength; ++sourceIdx) {
-                innerEnumerators[sourceIdx]->MoveNext();
-                targetSequence = targetSequence->Append(innerEnumerators[sourceIdx]->Current());
+                innerEnumerators.Get(sourceIdx)->MoveNext();
+                targetSequence = targetSequence->Append(innerEnumerators.Get(sourceIdx)->Current());
+
             }
             result = result->Append(targetSequence);
         }
 
-        for (auto *enumerator: innerEnumerators) {
-            delete enumerator;
+        for (size_t targetIdx = 0; targetIdx < outerLength; ++targetIdx) {
+            delete innerEnumerators.Get(targetIdx);
         }
 
         return result;
@@ -185,12 +188,11 @@ public:
             return new MutableArraySequence<Sequence<T> *>();
         }
 
-        std::vector<IEnumerator<T> *> innerEnumerators(outerLength);
+        DynamicArray<IEnumerator<T> *> innerEnumerators(outerLength);
         {
-            size_t sourceIdx = 0;
             auto *tempOuterEnumerator = outerSequence.GetEnumerator();
             while (tempOuterEnumerator->MoveNext()) {
-                innerEnumerators[sourceIdx++] = tempOuterEnumerator->Current()->GetEnumerator();
+                innerEnumerators.Append(tempOuterEnumerator->Current()->GetEnumerator());
             }
             delete tempOuterEnumerator;
         }
@@ -199,14 +201,14 @@ public:
         for (size_t targetIdx = 0; targetIdx < minLength; ++targetIdx) {
             Sequence<T> *targetSequence = new MutableArraySequence<T>();
             for (size_t sourceIdx = 0; sourceIdx < outerLength; ++sourceIdx) {
-                innerEnumerators[sourceIdx]->MoveNext();
-                targetSequence = targetSequence->Append(innerEnumerators[sourceIdx]->Current());
+                innerEnumerators.Get(sourceIdx)->MoveNext();
+                targetSequence = targetSequence->Append(innerEnumerators.Get(sourceIdx)->Current());
             }
             result = result->Append(targetSequence);
         }
 
-        for (auto *enumerator: innerEnumerators) {
-            delete enumerator;
+        for (size_t targetIdx = 0; targetIdx < outerLength; ++targetIdx) {
+            delete innerEnumerators.Get(targetIdx);
         }
 
         return result;
@@ -342,6 +344,35 @@ public:
 
         return resultSequence;
     }
+
+    std::tuple<T, T, double> GetMinMaxAvg(Sequence<T>* seq) {
+        if (!seq || seq->GetLength() == 0) {
+            throw std::out_of_range("Cannot compute stats on empty sequence");
+        }
+
+        auto* enumerator = seq->GetEnumerator();
+        enumerator->MoveNext();
+
+        T min_val = enumerator->Current();
+        T max_val = enumerator->Current();
+        T sum     = enumerator->Current();
+        size_t count = 1;
+
+        while (enumerator->MoveNext()) {
+            T val = enumerator->Current();
+            if (val < min_val) min_val = val;
+            if (val > max_val) max_val = val;
+            sum += val;
+            ++count;
+        }
+
+        delete enumerator;
+
+        double avg = sum / static_cast<double>(count);
+        return std::make_tuple(min_val, max_val, avg);
+    }
+
+    
 
     virtual ~Sequence() = default;
 };
