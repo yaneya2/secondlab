@@ -26,7 +26,7 @@ public:
     const std::string &GetPatronymic() const noexcept { return patronymic_; }
     size_t GetId() const noexcept { return id_; }
     const std::string &GetBirthDate() const noexcept { return birthDate_; }
-    
+
     std::string GetFullName() const {
         return lastName_ + " " + firstName_ + " " + patronymic_;
     }

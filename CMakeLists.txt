@@ -23,6 +23,11 @@ add_executable(secondlab main.cpp
         classes/cpp/UI.cpp
         classes/cpp/BItSequence.cpp
         classes/headers/BItSequence.h
+        classes/headers/Segment.h
+        classes/headers/DoublyLinkedList.h
+        classes/headers/SegmentedDeque.h
+        classes/headers/Student.h
+        classes/headers/Teacher.h
 
 )
 add_executable(tests
