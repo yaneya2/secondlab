@@ -94,38 +94,9 @@ public:
         return new SegmentedDequeIterator(segments);
     }
 
-    Sequence<T> *appendImpl(const T &item) override {
-        Segment<T> *lastSeg = segments->GetLast();
-        if (lastSeg->IsTailNotAtSize() || lastSeg->IsEmpty()) {
-            lastSeg->Append(item);
-        } else {
-            auto *newSeg = new Segment<T>(segmentLength);
-            newSeg->SetHead(0);
-            newSeg->SetTail(0);
-            newSeg->Append(item);
-            segments->Append(newSeg);
-        }
-        length++;
-        return this;
-    }
-
-    Sequence<T> *prependImpl(const T &item) {
-        Segment<T> *firstSeg = segments->GetFirst();
-        if (firstSeg->IsHeadNotZero() || firstSeg->IsEmpty()) {
-            firstSeg->Prepend(item);
-        } else {
-            auto *newSeg = new Segment<T>(segmentLength);
-            newSeg->SetHead(segmentLength - 1);
-            newSeg->SetTail(segmentLength - 1);
-            newSeg->Prepend(item);
-            segments->Prepend(newSeg);
-        }
-        length++;
-        return this;
-    }
 
     size_t GetLength() const override {
-        return segments->GetSize();
+        return GetCountElements();
     }
 
     size_t GetCountElements() const {
@@ -156,53 +127,113 @@ public:
         return lastSeg->peekLast();
     }
 
-
     T PopFirst() {
-        if (IsEmpty()) {
+        if (length == 0) {
             throw std::out_of_range("SegmentedDeque::PopFirst: deque is empty");
         }
+
         Segment<T> *firstSeg = segments->GetFirst();
+        T result;
+        firstSeg->PopFirst(result);
+        --length;
+
+        if (firstSeg->GetSize() == 0) {
+            segments->Del(0);
+            delete firstSeg;
+
+
+            if (segments->GetSize() == 0) {
+                auto *newSeg = new Segment<T>(segmentLength);
+                size_t mid = segmentLength / 2;
+                newSeg->SetHead(mid);
+                newSeg->SetTail(mid);
+                segments->Append(newSeg);
+            }
+        }
+        return result;
+    }
+
+    T PopLast() {
+        if (IsEmpty()) {
+            throw std::out_of_range("SegmentedDeque::PopLast: deque is empty");
+        }
+
+        Segment<T> *lastSeg = segments->GetLast();
         T res{};
-        firstSeg->PopFirst(res);
+        lastSeg->PopLast(res);
+        --length;
+
+
+        if (lastSeg->GetSize() == 0) {
+            segments->Del(segments->GetSize() - 1);
+            delete lastSeg;
+
+            if (length == 0 && segments->GetSize() == 0) {
+                auto *newSeg = new Segment<T>(segmentLength);
+                size_t mid = segmentLength / 2;
+                newSeg->SetHead(mid);
+                newSeg->SetTail(mid);
+                segments->Append(newSeg);
+            }
+        }
         return res;
     }
 
-    int FindSubsequence(const Sequence<T>& subsequence) const {
-        size_t subLen = subsequence.GetSize();
+    int FindSubsequence(const Sequence<T> &subsequence) const {
+        size_t subLen = subsequence.GetLength();
         if (subLen == 0) return 0;
-        if (subLen > length) return -1;
 
-        IEnumerator<T>* it = this->GetEnumerator();
-        size_t currentIdx = 0;
+        IEnumerator<T> *itMain = this->GetEnumerator();
+        IEnumerator<T> *itSub = subsequence.GetEnumerator();
+        size_t mainIdx = 0;
+        size_t subIdx = 0;
         size_t matchStart = 0;
-        size_t matchPos = 0;
+        bool manuallyAdvanced = false;
 
-        while (it->MoveNext()) {
-            if (it->Current() == subsequence.Get(matchPos)) {
-                if (matchPos == 0) {
-                    matchStart = currentIdx;
-                }
-                matchPos++;
+        while (true) {
+            if (!manuallyAdvanced && !itMain->MoveNext()) {
+                delete itMain;
+                delete itSub;
+                return -1;
+            }
+            manuallyAdvanced = false;
 
-                if (matchPos == subLen) {
-                    delete it;
+            if (subIdx == 0) {
+                itSub->Reset();
+                itSub->MoveNext();
+                matchStart = mainIdx;
+            } else {
+                itSub->MoveNext();
+            }
+
+            if (itMain->Current() == itSub->Current()) {
+                ++subIdx;
+                if (subIdx == subLen) {
+                    delete itMain;
+                    delete itSub;
                     return static_cast<int>(matchStart);
                 }
             } else {
-                if (matchPos > 0) {
-                    matchPos = 0;
-                    it->Reset();
-                    for (size_t i = 0; i <= matchStart; ++i) {
-                        it->MoveNext();
-                    }
-                    currentIdx = matchStart;
-                }
-            }
-            currentIdx++;
-        }
+                itSub->Reset();
 
-        delete it;
-        return -1;
+                itMain->Reset();
+                mainIdx = matchStart;
+
+                for (size_t i = 0; i < matchStart + 2; ++i) {
+                    if (!itMain->MoveNext()) {
+                        delete itMain;
+                        delete itSub;
+                        return -1;
+                    }
+                }
+
+                mainIdx = matchStart + 1;
+                subIdx = 0;
+                manuallyAdvanced = true;
+                continue;
+            }
+            ++mainIdx;
+        }
     }
 
     friend std::ostream &operator<<(std::ostream &os, const SegmentedDeque<T> &deque) {
@@ -213,7 +244,7 @@ public:
             os << "[";
             for (size_t j = 0; j < cap; ++j) {
                 if (j > 0) os << ", ";
-                if (j < seg->GetHead() || j > seg->GetTail()) {
+                if (j < seg->GetHead() || j > seg->GetTail() || seg->GetSize() == 0) {
                     os << "_";
                 } else {
                     os << seg->Get(j);
@@ -230,6 +261,36 @@ public:
 
 protected:
     Sequence<T> *instance() override {
+        return this;
+    }
+
+    Sequence<T> *appendImpl(const T &item) override {
+        Segment<T> *lastSeg = segments->GetLast();
+        if (lastSeg->IsTailNotAtSize() || lastSeg->IsEmpty()) {
+            lastSeg->Append(item);
+        } else {
+            auto *newSeg = new Segment<T>(segmentLength);
+            newSeg->SetHead(0);
+            newSeg->SetTail(0);
+            newSeg->Append(item);
+            segments->Append(newSeg);
+        }
+        length++;
+        return this;
+    }
+
+    Sequence<T> *prependImpl(const T &item) {
+        Segment<T> *firstSeg = segments->GetFirst();
+        if (firstSeg->IsHeadNotZero() || firstSeg->IsEmpty()) {
+            firstSeg->Prepend(item);
+        } else {
+            auto *newSeg = new Segment<T>(segmentLength);
+            newSeg->SetHead(segmentLength - 1);
+            newSeg->SetTail(segmentLength - 1);
+            newSeg->Prepend(item);
+            segments->Prepend(newSeg);
+        }
+        length++;
         return this;
     }
 

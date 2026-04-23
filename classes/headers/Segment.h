@@ -174,20 +174,22 @@ public:
     }
 
     bool PopFirst(T &outValue) {
-        if (head >= tail || head >= data->GetSize()) {
+        if (head > tail || head >= data->GetSize()) {
             return false;
         }
         outValue = data->Get(head);
         ++head;
+        size--;
         return true;
     }
 
     bool PopLast(T &outValue) {
-        if (tail <= head || tail == 0) {
+        if (tail < head) {
             return false;
         }
-        --tail;
         outValue = data->Get(tail);
+        --tail;
+        size--;
         return true;
     }
 
