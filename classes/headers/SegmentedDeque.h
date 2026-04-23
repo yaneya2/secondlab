@@ -259,6 +259,35 @@ public:
         return os;
     }
 
+    Sequence<T> *GetSubsequence(size_t startIndex, size_t endIndex) const override {
+        if (startIndex > endIndex || endIndex >= length) {
+            throw std::out_of_range("GetSubsequence: invalid indices");
+        }
+
+        auto *result = new SegmentedDeque<T>(segmentLength);
+
+        IEnumerator<T> *enumerator = this->GetEnumerator();
+
+        size_t currentIndex = 0;
+        while (enumerator->MoveNext()) {
+            if (currentIndex >= startIndex && currentIndex <= endIndex) {
+                result->appendImpl(enumerator->Current());
+            }
+            if (currentIndex >= endIndex) {
+                break;
+            }
+            ++currentIndex;
+        }
+
+        delete enumerator;
+
+        return result;
+    }
+
+    ~SegmentedDeque() override {
+        delete segments;
+    }
+
 protected:
     Sequence<T> *instance() override {
         return this;
@@ -362,36 +391,6 @@ protected:
 
     Sequence<T> *createEmpty() const override {
         return new SegmentedDeque<T>(segmentLength);
-    }
-
-public:
-    Sequence<T> *GetSubsequence(size_t startIndex, size_t endIndex) const override {
-        if (startIndex > endIndex || endIndex >= length) {
-            throw std::out_of_range("GetSubsequence: invalid indices");
-        }
-
-        auto *result = new SegmentedDeque<T>(segmentLength);
-
-        IEnumerator<T> *enumerator = this->GetEnumerator();
-
-        size_t currentIndex = 0;
-        while (enumerator->MoveNext()) {
-            if (currentIndex >= startIndex && currentIndex <= endIndex) {
-                result->appendImpl(enumerator->Current());
-            }
-            if (currentIndex >= endIndex) {
-                break;
-            }
-            ++currentIndex;
-        }
-
-        delete enumerator;
-
-        return result;
-    }
-
-    ~SegmentedDeque() override {
-        delete segments;
     }
 };
 
