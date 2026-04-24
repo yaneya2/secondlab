@@ -2,6 +2,7 @@
 #define SECONDLAB_SEGMENTEDDEQUE_H
 
 #include "DoublyLinkedList.h"
+#include "Sequence.h"
 #include "Segment.h"
 #include <iostream>
 
@@ -96,10 +97,6 @@ public:
 
 
     size_t GetLength() const override {
-        return GetCountElements();
-    }
-
-    size_t GetCountElements() const {
         size_t count = 0;
         for (size_t i = 0; i < segments->GetSize(); i++) {
             count += segments->Get(i)->GetSize();
@@ -119,7 +116,7 @@ public:
         return firstSeg->peekFirst();
     }
 
-    T GetLast() const {
+    T GetLast() const override{
         if (IsEmpty()) {
             throw std::out_of_range("SegmentedDeque::PeekLast: deque is empty");
         }
@@ -288,11 +285,6 @@ public:
         delete segments;
     }
 
-protected:
-    Sequence<T> *instance() override {
-        return this;
-    }
-
     Sequence<T> *appendImpl(const T &item) override {
         Segment<T> *lastSeg = segments->GetLast();
         if (lastSeg->IsTailNotAtSize() || lastSeg->IsEmpty()) {
@@ -392,6 +384,13 @@ protected:
     Sequence<T> *createEmpty() const override {
         return new SegmentedDeque<T>(segmentLength);
     }
+
+protected:
+    Sequence<T> *instance() override {
+        return this;
+    }
+
+
 };
 
 #endif

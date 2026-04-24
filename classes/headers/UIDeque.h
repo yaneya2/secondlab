@@ -1,0 +1,6 @@
+#ifndef SECONDLAB_UIDEQUE_H
+#define SECONDLAB_UIDEQUE_H
+
+int run();
+
+#endif //SECONDLAB_UIDEQUE_H
