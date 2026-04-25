@@ -41,7 +41,6 @@ std::tuple<double, double> solve_projectile(double g, double x, double v_start, 
     return {0, 0};
 }
 
-
 int main() {
     system("chcp 65001");
     run();

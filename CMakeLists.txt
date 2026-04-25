@@ -28,12 +28,15 @@ add_executable(secondlab main.cpp
         classes/headers/SegmentedDeque.h
         classes/headers/Student.h
         classes/headers/Teacher.h
+        classes/cpp/UIDeque.cpp
+        classes/headers/UIDeque.h
 
 )
 add_executable(tests
         tests/testsDynamicArray.cpp
         tests/testsLinkedList.cpp
         tests/testsSequence.cpp
+        tests/testsSegmentedDeque.cpp
 )
 
 target_link_libraries(tests PRIVATE GTest::gtest_main)
