@@ -15,19 +15,19 @@ class MutableArraySequence;
 template<typename T>
 class Sequence {
 protected:
-    virtual Sequence<T> *instance() = 0;
+    virtual Sequence<T> *Instance() = 0;
 
-    virtual Sequence<T> *appendImpl(const T &elem) = 0;
+    virtual Sequence<T> *AppendImpl(const T &elem) = 0;
 
-    virtual Sequence<T> *prependImpl(const T &elem) = 0;
+    virtual Sequence<T> *PrependImpl(const T &elem) = 0;
 
-    virtual Sequence<T> *insertAtImpl(const T &elem, size_t index) = 0;
+    virtual Sequence<T> *InsertAtImpl(const T &elem, size_t index) = 0;
 
-    virtual Sequence<T> *concatImpl(const Sequence<T> &other) = 0;
+    virtual Sequence<T> *ConcatImpl(const Sequence<T> &other) = 0;
 
-    virtual Sequence<T> *delImpl(size_t index) = 0;
+    virtual Sequence<T> *DelImpl(size_t index) = 0;
 
-    virtual Sequence<T> *createEmpty() const = 0;
+    virtual Sequence<T> *CreateEmpty() const = 0;
 
 public:
     virtual T GetFirst() const = 0;
@@ -41,28 +41,28 @@ public:
     virtual IEnumerator<T> *GetEnumerator() const = 0;
 
     Sequence<T> *Append(const T &elem) {
-        return instance()->appendImpl(elem);
+        return Instance()->AppendImpl(elem);
     }
 
     Sequence<T> *Prepend(const T &elem) {
-        return instance()->prependImpl(elem);
+        return Instance()->PrependImpl(elem);
     }
 
     Sequence<T> *InsertAt(const T &elem, size_t index) {
-        return instance()->insertAtImpl(elem, index);
+        return Instance()->InsertAtImpl(elem, index);
     }
 
     Sequence<T> *Concat(const Sequence<T> &list) {
-        return instance()->concatImpl(list);
+        return Instance()->ConcatImpl(list);
     }
 
     Sequence<T> *Del(size_t index) {
-        return instance()->delImpl(index);
+        return Instance()->DelImpl(index);
     }
 
     template<typename T2>
     Sequence<T> *Map(T2 (&func)(T)) {
-        Sequence<T> *result = createEmpty();
+        Sequence<T> *result = CreateEmpty();
         auto enumerator = this->GetEnumerator();
         while (enumerator->MoveNext()) {
             result = result->Append(func(enumerator->Current()));
@@ -71,7 +71,7 @@ public:
     }
 
     Sequence<T> *Where(bool (&func)(T)) {
-        Sequence<T> *result = createEmpty();
+        Sequence<T> *result = CreateEmpty();
         auto enumerator = this->GetEnumerator();
         while (enumerator->MoveNext()) {
             if (func(enumerator->Current())) {
@@ -216,7 +216,7 @@ public:
 
     Sequence<T> *Skip(size_t skipCount) const {
         if (skipCount >= GetLength()) {
-            return createEmpty();
+            return CreateEmpty();
         }
 
         Sequence<T> *result = new MutableArraySequence<T>();

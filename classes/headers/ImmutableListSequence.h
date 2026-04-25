@@ -15,7 +15,7 @@ public:
     ImmutableListSequence(LinkedList<T> *list, size_t size) : ListSequence<T>(list, size) {}
 
 protected:
-    Sequence<T> *instance() override {
+    Sequence<T> *Instance() override {
         return new ImmutableListSequence<T>(*this);
     }
 };

@@ -32,33 +32,33 @@ public:
         return size;
     }
 
-    Sequence<T>* delImpl(size_t index) override {
+    Sequence<T>* DelImpl(size_t index) override {
         if (size == 0) throw std::out_of_range("Sequence is empty");
         data->Del(index);
         --size;
         return this;
     }
 
-    Sequence<T> *appendImpl(const T &elem) override {
+    Sequence<T> *AppendImpl(const T &elem) override {
         data->Append(elem);
         ++size;
         return this;
     }
 
-    Sequence<T> *prependImpl(const T &elem) override {
+    Sequence<T> *PrependImpl(const T &elem) override {
         data->Prepend(elem);
         ++size;
         return this;
     }
 
-    Sequence<T> *insertAtImpl(const T &elem, size_t index) override {
+    Sequence<T> *InsertAtImpl(const T &elem, size_t index) override {
         if (index > size) throw std::out_of_range("Index out of range");
         data->InsertAt(index, elem);
         ++size;
         return this;
     }
 
-    Sequence<T> *concatImpl(const Sequence<T>& other) override {
+    Sequence<T> *ConcatImpl(const Sequence<T>& other) override {
         size_t otherLen = other.GetLength();
         auto enumerator = other.GetEnumerator();
         while (enumerator->MoveNext()) {
@@ -68,7 +68,7 @@ public:
         return this;
     }
 
-    Sequence<T> *createEmpty() const override {
+    Sequence<T> *CreateEmpty() const override {
         return new MutableListSequence<T>();
     }
 

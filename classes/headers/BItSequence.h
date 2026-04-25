@@ -44,24 +44,24 @@ public:
 
     BitSequence *setBit(size_t bitIdx, bool value);
 
-    BitSequence *createEmpty() const override;
+    BitSequence *CreateEmpty() const override;
 
     std::string toDecimalString() const;
 
     ~BitSequence() override;
 
 protected:
-    BitSequence *delImpl(size_t index) override;
+    BitSequence *DelImpl(size_t index) override;
 
-    BitSequence *appendImpl(const bool &elem) override;
+    BitSequence *AppendImpl(const bool &elem) override;
 
-    BitSequence *prependImpl(const bool &elem) override;
+    BitSequence *PrependImpl(const bool &elem) override;
 
-    BitSequence *insertAtImpl(const bool &elem, size_t index) override;
+    BitSequence *InsertAtImpl(const bool &elem, size_t index) override;
 
-    BitSequence *concatImpl(const Sequence<bool> &other) override;
+    BitSequence *ConcatImpl(const Sequence<bool> &other) override;
 
-    BitSequence *instance() override;
+    BitSequence *Instance() override;
 
 
     class BitEnumerator : public IEnumerator<bool> {

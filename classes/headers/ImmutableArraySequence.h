@@ -15,7 +15,7 @@ public:
     ImmutableArraySequence(DynamicArray<T> *arr, size_t size) : ArraySequence<T>(arr, size) {}
 
 protected:
-    Sequence<T> *instance() override {
+    Sequence<T> *Instance() override {
         return new ImmutableArraySequence<T>(*this);
     }
 };

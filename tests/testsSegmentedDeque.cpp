@@ -9,8 +9,8 @@ using TestDeque = SegmentedDeque<int>;
 
 static void FillDeque(TestDeque &dq, const std::vector<int> &values, bool prepend = false) {
     for (int v: values) {
-        if (prepend) dq.prependImpl(v);
-        else dq.appendImpl(v);
+        if (prepend) dq.PrependImpl(v);
+        else dq.AppendImpl(v);
     }
 }
 
@@ -27,23 +27,23 @@ TEST(SegmentedDequeTest, ConstructorThrowsOnInvalidSegmentLength) {
 
 TEST(SegmentedDequeTest, AppendIncreasesSize) {
     TestDeque dq(4);
-    dq.appendImpl(10);
+    dq.AppendImpl(10);
     EXPECT_EQ(dq.GetLength(), 1);
     EXPECT_FALSE(dq.IsEmpty());
 }
 
 TEST(SegmentedDequeTest, PrependIncreasesSize) {
     TestDeque dq(4);
-    dq.prependImpl(5);
+    dq.PrependImpl(5);
     EXPECT_EQ(dq.GetLength(), 1);
     EXPECT_FALSE(dq.IsEmpty());
 }
 
 TEST(SegmentedDequeTest, MixedAppendPrependOrder) {
     TestDeque dq(4);
-    dq.appendImpl(10);
-    dq.prependImpl(5);
-    dq.appendImpl(15);
+    dq.AppendImpl(10);
+    dq.PrependImpl(5);
+    dq.AppendImpl(15);
     EXPECT_EQ(dq.GetLength(), 3);
     EXPECT_EQ(dq.GetFirst(), 5);
     EXPECT_EQ(dq.GetLast(), 15);
@@ -80,11 +80,11 @@ TEST(SegmentedDequeTest, PopLastCorrect) {
 
 TEST(SegmentedDequeTest, PopUntilEmptyReinitializes) {
     TestDeque dq(4);
-    dq.appendImpl(42);
+    dq.AppendImpl(42);
     dq.PopFirst();
     EXPECT_TRUE(dq.IsEmpty());
     // Внутренний пустой сегмент должен сохраняться
-    EXPECT_NO_THROW(dq.appendImpl(99));
+    EXPECT_NO_THROW(dq.AppendImpl(99));
     EXPECT_EQ(dq.GetLength(), 1);
 }
 
@@ -181,7 +181,7 @@ TEST(SegmentedDequeTest, GetSubsequenceInvalidRangesThrow) {
 TEST(SegmentedDequeTest, InsertAtImplCreatesNewDeque) {
     TestDeque dq(4);
     FillDeque(dq, {10, 30});
-    Sequence<int> *resSeq = dq.insertAtImpl(20, 1);
+    Sequence<int> *resSeq = dq.InsertAtImpl(20, 1);
     TestDeque *res = dynamic_cast<TestDeque *>(resSeq);
     ASSERT_NE(res, nullptr);
 
@@ -202,7 +202,7 @@ TEST(SegmentedDequeTest, InsertAtImplCreatesNewDeque) {
 TEST(SegmentedDequeTest, DelImplCreatesNewDeque) {
     TestDeque dq(4);
     FillDeque(dq, {10, 20, 30});
-    Sequence<int> *resSeq = dq.delImpl(1);
+    Sequence<int> *resSeq = dq.DelImpl(1);
     TestDeque *res = dynamic_cast<TestDeque *>(resSeq);
     ASSERT_NE(res, nullptr);
 
@@ -220,7 +220,7 @@ TEST(SegmentedDequeTest, ConcatImplCreatesNewDeque) {
     TestDeque dq1(4), dq2(4);
     FillDeque(dq1, {1, 2});
     FillDeque(dq2, {3, 4});
-    Sequence<int> *resSeq = dq1.concatImpl(dq2);
+    Sequence<int> *resSeq = dq1.ConcatImpl(dq2);
     TestDeque *res = dynamic_cast<TestDeque *>(resSeq);
     ASSERT_NE(res, nullptr);
 
@@ -237,7 +237,7 @@ TEST(SegmentedDequeTest, ConcatImplCreatesNewDeque) {
 TEST(SegmentedDequeTest, CreateEmptyReturnsFreshInstance) {
     TestDeque dq(5);
     FillDeque(dq, {1, 2, 3});
-    Sequence<int> *emptySeq = dq.createEmpty();
+    Sequence<int> *emptySeq = dq.CreateEmpty();
     TestDeque *emptyDq = dynamic_cast<TestDeque *>(emptySeq);
     ASSERT_NE(emptyDq, nullptr);
     EXPECT_TRUE(emptyDq->IsEmpty());
@@ -248,7 +248,7 @@ TEST(SegmentedDequeTest, CreateEmptyReturnsFreshInstance) {
 TEST(SegmentedDequeTest, OperationsAcrossMultipleSegments) {
     TestDeque dq(3);
     for (int i = 1; i <= 10; ++i) {
-        dq.appendImpl(i);
+        dq.AppendImpl(i);
     }
     EXPECT_EQ(dq.GetLength(), 10);
 
@@ -266,9 +266,9 @@ TEST(SegmentedDequeTest, OperationsAcrossMultipleSegments) {
 
 TEST(SegmentedDequeTest, AppendWhenTailIsFull_CreatesNewSegment) {
     TestDeque dq(3);
-    dq.appendImpl(10);
-    dq.appendImpl(20);
-    dq.appendImpl(30);
+    dq.AppendImpl(10);
+    dq.AppendImpl(20);
+    dq.AppendImpl(30);
     EXPECT_EQ(dq.GetLength(), 3);
     auto *it = dq.GetEnumerator();
     EXPECT_TRUE(it->MoveNext());
@@ -283,9 +283,9 @@ TEST(SegmentedDequeTest, AppendWhenTailIsFull_CreatesNewSegment) {
 
 TEST(SegmentedDequeTest, PrependWhenHeadIsZero_CreatesNewSegment) {
     TestDeque dq(3);
-    dq.prependImpl(20);
-    dq.prependImpl(10);
-    dq.prependImpl(5);
+    dq.PrependImpl(20);
+    dq.PrependImpl(10);
+    dq.PrependImpl(5);
     EXPECT_EQ(dq.GetLength(), 3);
     auto *it = dq.GetEnumerator();
     EXPECT_TRUE(it->MoveNext());
@@ -300,10 +300,10 @@ TEST(SegmentedDequeTest, PrependWhenHeadIsZero_CreatesNewSegment) {
 
 TEST(SegmentedDequeTest, AppendPrepend_MultipleSegmentTransitions) {
     TestDeque dq(2);
-    dq.appendImpl(1);
-    dq.prependImpl(0);
-    dq.appendImpl(2);
-    dq.prependImpl(-1);
+    dq.AppendImpl(1);
+    dq.PrependImpl(0);
+    dq.AppendImpl(2);
+    dq.PrependImpl(-1);
     EXPECT_EQ(dq.GetLength(), 4);
     auto *it = dq.GetEnumerator();
     std::vector<int> result;
@@ -394,7 +394,7 @@ TEST(SegmentedDequeTest, GetSubsequence_EmptyResult_InvalidRange) {
 
 TEST(SegmentedDequeTest, GetSubsequence_AcrossSegmentBoundaries) {
     TestDeque dq(3);
-    for (int i = 1; i <= 7; ++i) dq.appendImpl(i);
+    for (int i = 1; i <= 7; ++i) dq.AppendImpl(i);
     Sequence<int> *sub = dq.GetSubsequence(2, 4);
     EXPECT_EQ(sub->GetLength(), 3);
     auto *it = sub->GetEnumerator();
@@ -409,7 +409,7 @@ TEST(SegmentedDequeTest, GetSubsequence_AcrossSegmentBoundaries) {
 TEST(SegmentedDequeTest, InsertAtImpl_IndexZero_EqualsPrepend) {
     TestDeque dq(4);
     FillDeque(dq, {20, 30, 40});
-    Sequence<int> *res = dq.insertAtImpl(10, 0);
+    Sequence<int> *res = dq.InsertAtImpl(10, 0);
     ASSERT_NE(res, nullptr);
     EXPECT_EQ(res->GetLength(), 4);
     auto *it = res->GetEnumerator();
@@ -426,7 +426,7 @@ TEST(SegmentedDequeTest, InsertAtImpl_IndexZero_EqualsPrepend) {
 TEST(SegmentedDequeTest, InsertAtImpl_IndexEqualsLength_EqualsAppend) {
     TestDeque dq(4);
     FillDeque(dq, {10, 20, 30});
-    Sequence<int> *res = dq.insertAtImpl(40, 3);
+    Sequence<int> *res = dq.InsertAtImpl(40, 3);
     ASSERT_NE(res, nullptr);
     EXPECT_EQ(res->GetLength(), 4);
     auto *it = res->GetEnumerator();
@@ -441,14 +441,14 @@ TEST(SegmentedDequeTest, InsertAtImpl_IndexEqualsLength_EqualsAppend) {
 TEST(SegmentedDequeTest, InsertAtImpl_IndexGreaterThanLength_Throws) {
     TestDeque dq(4);
     FillDeque(dq, {1, 2, 3});
-    EXPECT_THROW(dq.insertAtImpl(99, 4), std::out_of_range);
-    EXPECT_THROW(dq.insertAtImpl(99, 100), std::out_of_range);
+    EXPECT_THROW(dq.InsertAtImpl(99, 4), std::out_of_range);
+    EXPECT_THROW(dq.InsertAtImpl(99, 100), std::out_of_range);
     EXPECT_EQ(dq.GetLength(), 3);
 }
 
 TEST(SegmentedDequeTest, InsertAtImpl_EmptyDeque_InsertAtZero) {
     TestDeque dq(4);
-    Sequence<int> *res = dq.insertAtImpl(42, 0);
+    Sequence<int> *res = dq.InsertAtImpl(42, 0);
     EXPECT_EQ(res->GetLength(), 1);
     auto *it = res->GetEnumerator();
     EXPECT_TRUE(it->MoveNext());
@@ -461,7 +461,7 @@ TEST(SegmentedDequeTest, InsertAtImpl_EmptyDeque_InsertAtZero) {
 TEST(SegmentedDequeTest, InsertAtImpl_PreservesOriginalUnmodified) {
     TestDeque dq(4);
     FillDeque(dq, {1, 2, 3});
-    Sequence<int> *res = dq.insertAtImpl(99, 1);
+    Sequence<int> *res = dq.InsertAtImpl(99, 1);
     EXPECT_EQ(dq.GetLength(), 3);
     auto *itOrig = dq.GetEnumerator();
     for (int expected: {1, 2, 3}) {

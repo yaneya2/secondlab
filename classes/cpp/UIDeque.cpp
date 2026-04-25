@@ -39,7 +39,7 @@ SeqType *createTempSequence() {
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
             break;
         }
-        temp->appendImpl(val);
+        temp->AppendImpl(val);
     }
     return temp;
 }
@@ -123,7 +123,7 @@ int run() {
                     T val;
                     std::cout << "Значение для добавления в конец: ";
                     std::cin >> val;
-                    safeReplace(current, current->appendImpl(val));
+                    safeReplace(current, current->AppendImpl(val));
                     std::cout << "Элемент добавлен.\n";
                     break;
                 }
@@ -136,7 +136,7 @@ int run() {
                     T val;
                     std::cout << "Значение для добавления в начало: ";
                     std::cin >> val;
-                    safeReplace(current, current->prependImpl(val));
+                    safeReplace(current, current->PrependImpl(val));
                     std::cout << "Элемент добавлен.\n";
                     break;
                 }
@@ -152,7 +152,7 @@ int run() {
                     std::cin >> val;
                     std::cout << "Индекс вставки: ";
                     std::cin >> idx;
-                    safeReplace(current, current->insertAtImpl(val, idx));
+                    safeReplace(current, current->InsertAtImpl(val, idx));
                     std::cout << "Элемент вставлен.\n";
                     break;
                 }
@@ -165,7 +165,7 @@ int run() {
                     size_t idx;
                     std::cout << "Индекс для удаления: ";
                     std::cin >> idx;
-                    safeReplace(current, current->delImpl(idx));
+                    safeReplace(current, current->DelImpl(idx));
                     std::cout << "Элемент удален.\n";
                     break;
                 }
@@ -195,7 +195,7 @@ int run() {
                         std::cout << "Пустая последовательность, объединение отменено.\n";
                         break;
                     }
-                    auto *res = current->concatImpl(*temp);
+                    auto *res = current->ConcatImpl(*temp);
                     delete temp; // Временный объект удаляется сразу после использования
                     safeReplace(current, res);
                     std::cout << "Объединение выполнено.\n";
@@ -264,7 +264,7 @@ int run() {
                         std::cout << "Сначала создайте Deque.\n";
                         break;
                     }
-                    auto *res = current->createEmpty();
+                    auto *res = current->CreateEmpty();
                     safeReplace(current, res);
                     std::cout << "Заменено на пустой экземпляр.\n";
                     break;

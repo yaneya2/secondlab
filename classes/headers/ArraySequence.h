@@ -39,7 +39,7 @@ public:
         return size;
     }
 
-    Sequence<T>* delImpl(size_t index) override {
+    Sequence<T>* DelImpl(size_t index) override {
         if (index >= size) throw std::out_of_range("Index out of range");
         for (size_t i = index; i < size - 1; i++) {
             data->Set(i, data->Get(i + 1));
@@ -49,14 +49,14 @@ public:
         return this;
     }
 
-    Sequence<T>* appendImpl(const T& elem) override {
+    Sequence<T>* AppendImpl(const T& elem) override {
         ensureIncreaseCapacity();
         data->Set(size, elem);
         size++;
         return this;
     }
 
-    Sequence<T>* prependImpl(const T& elem) override {
+    Sequence<T>* PrependImpl(const T& elem) override {
         size_t oldSize = size;
         ensureIncreaseCapacity();
         for (int i = static_cast<int>(oldSize) - 1; i >= 0; i--) {
@@ -67,7 +67,7 @@ public:
         return this;
     }
 
-    Sequence<T>* insertAtImpl(const T& elem, size_t index) override {
+    Sequence<T>* InsertAtImpl(const T& elem, size_t index) override {
         size_t oldSize = size;
         ensureIncreaseCapacity();
         for (int i = static_cast<int>(oldSize) - 1; i >= static_cast<int>(index); i--) {
@@ -78,7 +78,7 @@ public:
         return this;
     }
 
-    Sequence<T>* concatImpl(const Sequence<T>& other) override {  // Ссылка!
+    Sequence<T>* ConcatImpl(const Sequence<T>& other) override {  // Ссылка!
         size_t oldSize = size;
         size_t addSize = other.GetLength();
         data->Resize(addSize + oldSize);
@@ -91,7 +91,7 @@ public:
         return this;
     }
 
-    Sequence<T>* createEmpty() const override {
+    Sequence<T>* CreateEmpty() const override {
         return new MutableArraySequence<T>();
     }
 

@@ -135,7 +135,7 @@ IEnumerator<bool> *BitSequence::GetEnumerator() const {
     return new BitEnumerator(this);
 }
 
-BitSequence *BitSequence::appendImpl(const bool &elem) {
+BitSequence *BitSequence::AppendImpl(const bool &elem) {
     ensureIncreaseCapacity();
 
     size_t byteIdx = bitSize / 8;
@@ -153,9 +153,9 @@ BitSequence *BitSequence::appendImpl(const bool &elem) {
     return this;
 }
 
-BitSequence *BitSequence::prependImpl(const bool &elem) {
+BitSequence *BitSequence::PrependImpl(const bool &elem) {
     if (bitSize == 0) {
-        return appendImpl(elem);
+        return AppendImpl(elem);
     }
 
     ensureIncreaseCapacity();
@@ -190,12 +190,12 @@ BitSequence *BitSequence::prependImpl(const bool &elem) {
 }
 
 
-BitSequence *BitSequence::insertAtImpl(const bool &elem, size_t index) {
+BitSequence *BitSequence::InsertAtImpl(const bool &elem, size_t index) {
     if (index > bitSize)
         throw std::out_of_range("BitSequence: insert index out of range");
 
-    if (index == bitSize) return appendImpl(elem);
-    if (index == 0) return prependImpl(elem);
+    if (index == bitSize) return AppendImpl(elem);
+    if (index == 0) return PrependImpl(elem);
 
     ensureIncreaseCapacity();
 
@@ -232,7 +232,7 @@ BitSequence *BitSequence::insertAtImpl(const bool &elem, size_t index) {
     return this;
 }
 
-BitSequence *BitSequence::delImpl(size_t index) {
+BitSequence *BitSequence::DelImpl(size_t index) {
     if (index >= bitSize)
         throw std::out_of_range("BitSequence: delete index out of range");
 
@@ -281,7 +281,7 @@ BitSequence *BitSequence::delImpl(size_t index) {
     return this;
 }
 
-BitSequence *BitSequence::concatImpl(const Sequence<bool> &other) {
+BitSequence *BitSequence::ConcatImpl(const Sequence<bool> &other) {
     size_t otherLen = other.GetLength();
     if (otherLen == 0) return this;
 
@@ -413,11 +413,11 @@ BitSequence *BitSequence::Not() const {
 }
 
 
-BitSequence *BitSequence::createEmpty() const {
+BitSequence *BitSequence::CreateEmpty() const {
     return new BitSequence(new DynamicArray<uint8_t>(0), 0);
 }
 
-BitSequence *BitSequence::instance() {
+BitSequence *BitSequence::Instance() {
     return this;
 }
 

@@ -3,26 +3,201 @@
 
 #include "DoublyLinkedList.h"
 #include "Sequence.h"
-#include "Segment.h"
+#include "DynamicArray.h"
+#include "IEnumerator.h"
 #include <iostream>
+#include <stdexcept>
 
 template<typename T>
 class SegmentedDeque : public Sequence<T> {
 private:
-    DoublyLinkedList<Segment<T> *> *segments;
+    class Segment {
+    private:
+        DynamicArray<T> data;
+        size_t head;
+        size_t tail;
+        size_t size;
+
+        class SegmentEnumerator : public IEnumerator<T> {
+        private:
+            const Segment &segment;
+            size_t currentIndex;
+
+        public:
+            explicit SegmentEnumerator(const Segment &seg)
+                : segment(seg), currentIndex(segment.head) {
+            }
+
+            bool MoveNext() override {
+                if (segment.IsEmpty()) return false;
+                if (currentIndex <= segment.tail) {
+                    ++currentIndex;
+                    return true;
+                }
+                return false;
+            }
+
+            T Current() const override {
+                if (currentIndex < segment.head ||
+                    currentIndex > segment.tail + 1 ||
+                    segment.IsEmpty()) {
+                    throw std::out_of_range("SegmentEnumerator out of range");
+                }
+                return segment.data.Get(currentIndex - 1);
+            }
+
+            void Reset() override {
+                currentIndex = segment.head - 1;
+            }
+        };
+
+    public:
+        explicit Segment(size_t capacity)
+            : data(capacity), head(0), tail(0), size(0) {
+        }
+
+        Segment(size_t capacity, size_t headIdx, size_t tailIdx)
+            : data(capacity), head(headIdx), tail(tailIdx), size(0) {
+        }
+
+        ~Segment() = default;
+
+        Segment(const Segment &other)
+            : data(other.data), head(other.head), tail(other.tail), size(other.size) {
+        }
+
+        Segment &operator=(const Segment &other) {
+            if (this != &other) {
+                data = other.data;
+                head = other.head;
+                tail = other.tail;
+                size = other.size;
+            }
+            return *this;
+        }
+
+        Segment(Segment &&other) noexcept
+            : data(std::move(other.data)),
+              head(other.head),
+              tail(other.tail),
+              size(other.size) {
+            other.head = 0;
+            other.tail = 0;
+            other.size = 0;
+        }
+
+        Segment &operator=(Segment &&other) noexcept {
+            if (this != &other) {
+                data = std::move(other.data);
+                head = other.head;
+                tail = other.tail;
+                size = other.size;
+                other.head = 0;
+                other.tail = 0;
+                other.size = 0;
+            }
+            return *this;
+        }
+
+        size_t GetHead() const { return head; }
+        size_t GetTail() const { return tail; }
+
+        T Get(size_t index) const {
+            return data.Get(index);
+        }
+
+        size_t GetSize() const { return size; }
+
+        void SetHead(size_t newHead) {
+            if (newHead >= data.GetSize()) {
+                throw std::out_of_range("Segment SetHead: index out of range");
+            }
+            head = newHead;
+        }
+
+        void SetTail(size_t newTail) {
+            if (newTail >= data.GetSize()) {
+                throw std::out_of_range("Segment SetTail: index out of range");
+            }
+            tail = newTail;
+        }
+
+        bool IsHeadNotZero() const { return head != 0; }
+        bool IsTailNotAtSize() const { return tail != data.GetSize() - 1; }
+        bool IsEmpty() const { return size == 0; }
+
+        bool Append(const T &value) {
+            if (tail >= data.GetSize()) {
+                return false;
+            }
+            if (GetSize() == 0) {
+                data.Set(tail, value);
+                size++;
+                return true;
+            }
+            tail++;
+            size++;
+            data.Set(tail, value);
+            return true;
+        }
+
+        bool Prepend(const T &value) {
+            if (head == 0) {
+                return false;
+            }
+            if (GetSize() == 0) {
+                data.Set(head, value);
+                size++;
+                return true;
+            }
+            head--;
+            size++;
+            data.Set(head, value);
+            return true;
+        }
+
+        T PeekFirst() const { return data.Get(head); }
+        T PeekLast() const { return data.Get(tail); }
+
+        bool PopFirst(T &outValue) {
+            if (head > tail || head >= data.GetSize()) {
+                return false;
+            }
+            outValue = data.Get(head);
+            ++head;
+            size--;
+            return true;
+        }
+
+        bool PopLast(T &outValue) {
+            if (tail < head) {
+                return false;
+            }
+            outValue = data.Get(tail);
+            --tail;
+            size--;
+            return true;
+        }
+
+        IEnumerator<T> *GetEnumerator() const {
+            return new SegmentEnumerator(*this);
+        }
+    };
+
+    DoublyLinkedList<Segment> segments;
     size_t segmentLength;
     size_t length;
 
     class SegmentedDequeIterator : public IEnumerator<T> {
     private:
-        DoublyLinkedList<Segment<T> *> *segmentsList;
-        IEnumerator<Segment<T> *> *segListEnum;
+        const DoublyLinkedList<Segment> &segmentsList;
+        IEnumerator<Segment> *segListEnum;
         IEnumerator<T> *segEnum;
         T currentValue;
         bool hasCurrent;
 
     public:
-        explicit SegmentedDequeIterator(DoublyLinkedList<Segment<T> *> *list)
+        explicit SegmentedDequeIterator(const DoublyLinkedList<Segment> &list)
             : segmentsList(list), segListEnum(nullptr), segEnum(nullptr), hasCurrent(false) {
         }
 
@@ -33,7 +208,7 @@ private:
 
         bool MoveNext() override {
             if (!segListEnum) {
-                segListEnum = segmentsList->GetEnumerator();
+                segListEnum = segmentsList.GetEnumerator();
             }
 
             if (segEnum) {
@@ -47,8 +222,8 @@ private:
             }
 
             while (segListEnum->MoveNext()) {
-                Segment<T> *seg = segListEnum->Current();
-                segEnum = seg->GetEnumerator();
+                const Segment &seg = segListEnum->Current();
+                segEnum = seg.GetEnumerator();
                 if (segEnum->MoveNext()) {
                     currentValue = segEnum->Current();
                     hasCurrent = true;
@@ -83,23 +258,21 @@ public:
         if (segmentLength < 2) {
             throw std::invalid_argument("SegmentedDeque: segmentLength must be greater than 2");
         }
-        segments = new DoublyLinkedList<Segment<T> *>();
-        auto *initialSegment = new Segment<T>(segLen);
+        Segment initialSegment(segLen);
         size_t mid = segLen / 2;
-        initialSegment->SetHead(mid);
-        initialSegment->SetTail(mid);
-        segments->Append(initialSegment);
+        initialSegment.SetHead(mid);
+        initialSegment.SetTail(mid);
+        segments.Append(initialSegment);
     }
 
     IEnumerator<T> *GetEnumerator() const override {
         return new SegmentedDequeIterator(segments);
     }
 
-
     size_t GetLength() const override {
         size_t count = 0;
-        for (size_t i = 0; i < segments->GetSize(); i++) {
-            count += segments->Get(i)->GetSize();
+        for (size_t i = 0; i < segments.GetSize(); i++) {
+            count += segments.Get(i).GetSize();
         }
         return count;
     }
@@ -112,16 +285,16 @@ public:
         if (IsEmpty()) {
             throw std::out_of_range("SegmentedDeque::PeekFirst: deque is empty");
         }
-        Segment<T> *firstSeg = segments->GetFirst();
-        return firstSeg->peekFirst();
+        const Segment &firstSeg = segments.GetFirst();
+        return firstSeg.PeekFirst();
     }
 
-    T GetLast() const override{
+    T GetLast() const override {
         if (IsEmpty()) {
             throw std::out_of_range("SegmentedDeque::PeekLast: deque is empty");
         }
-        Segment<T> *lastSeg = segments->GetLast();
-        return lastSeg->peekLast();
+        const Segment &lastSeg = segments.GetLast();
+        return lastSeg.PeekLast();
     }
 
     T PopFirst() {
@@ -129,22 +302,19 @@ public:
             throw std::out_of_range("SegmentedDeque::PopFirst: deque is empty");
         }
 
-        Segment<T> *firstSeg = segments->GetFirst();
+        Segment &firstSeg = segments.GetFirst();
         T result;
-        firstSeg->PopFirst(result);
+        firstSeg.PopFirst(result);
         --length;
 
-        if (firstSeg->GetSize() == 0) {
-            segments->Del(0);
-            delete firstSeg;
-
-
-            if (segments->GetSize() == 0) {
-                auto *newSeg = new Segment<T>(segmentLength);
+        if (firstSeg.GetSize() == 0) {
+            segments.Del(0);
+            if (segments.GetSize() == 0) {
+                Segment newSeg(segmentLength);
                 size_t mid = segmentLength / 2;
-                newSeg->SetHead(mid);
-                newSeg->SetTail(mid);
-                segments->Append(newSeg);
+                newSeg.SetHead(mid);
+                newSeg.SetTail(mid);
+                segments.Append(newSeg);
             }
         }
         return result;
@@ -155,22 +325,19 @@ public:
             throw std::out_of_range("SegmentedDeque::PopLast: deque is empty");
         }
 
-        Segment<T> *lastSeg = segments->GetLast();
+        Segment &lastSeg = segments.GetLast();
         T res{};
-        lastSeg->PopLast(res);
+        lastSeg.PopLast(res);
         --length;
 
-
-        if (lastSeg->GetSize() == 0) {
-            segments->Del(segments->GetSize() - 1);
-            delete lastSeg;
-
-            if (length == 0 && segments->GetSize() == 0) {
-                auto *newSeg = new Segment<T>(segmentLength);
+        if (lastSeg.GetSize() == 0) {
+            segments.Del(segments.GetSize() - 1);
+            if (length == 0 && segments.GetSize() == 0) {
+                Segment newSeg(segmentLength);
                 size_t mid = segmentLength / 2;
-                newSeg->SetHead(mid);
-                newSeg->SetTail(mid);
-                segments->Append(newSeg);
+                newSeg.SetHead(mid);
+                newSeg.SetTail(mid);
+                segments.Append(newSeg);
             }
         }
         return res;
@@ -212,7 +379,6 @@ public:
                 }
             } else {
                 itSub->Reset();
-
                 itMain->Reset();
                 mainIdx = matchStart;
 
@@ -235,20 +401,20 @@ public:
 
     friend std::ostream &operator<<(std::ostream &os, const SegmentedDeque<T> &deque) {
         os << "{ ";
-        for (size_t i = 0; i < deque.segments->GetSize(); ++i) {
-            Segment<T> *seg = deque.segments->Get(i);
+        for (size_t i = 0; i < deque.segments.GetSize(); ++i) {
+            const Segment &seg = deque.segments.Get(i);
             size_t cap = deque.segmentLength;
             os << "[";
             for (size_t j = 0; j < cap; ++j) {
                 if (j > 0) os << ", ";
-                if (j < seg->GetHead() || j > seg->GetTail() || seg->GetSize() == 0) {
+                if (j < seg.GetHead() || j > seg.GetTail() || seg.GetSize() == 0) {
                     os << "_";
                 } else {
-                    os << seg->Get(j);
+                    os << seg.Get(j);
                 }
             }
             os << "]";
-            if (i < deque.segments->GetSize() - 1) {
+            if (i < deque.segments.GetSize() - 1) {
                 os << " ";
             }
         }
@@ -268,7 +434,7 @@ public:
         size_t currentIndex = 0;
         while (enumerator->MoveNext()) {
             if (currentIndex >= startIndex && currentIndex <= endIndex) {
-                result->appendImpl(enumerator->Current());
+                result->AppendImpl(enumerator->Current());
             }
             if (currentIndex >= endIndex) {
                 break;
@@ -281,41 +447,39 @@ public:
         return result;
     }
 
-    ~SegmentedDeque() override {
-        delete segments;
-    }
+    ~SegmentedDeque() override = default;
 
-    Sequence<T> *appendImpl(const T &item) override {
-        Segment<T> *lastSeg = segments->GetLast();
-        if (lastSeg->IsTailNotAtSize() || lastSeg->IsEmpty()) {
-            lastSeg->Append(item);
+    Sequence<T> *AppendImpl(const T &item) override {
+        Segment &lastSeg = segments.GetLast();
+        if (lastSeg.IsTailNotAtSize() || lastSeg.IsEmpty()) {
+            lastSeg.Append(item);
         } else {
-            auto *newSeg = new Segment<T>(segmentLength);
-            newSeg->SetHead(0);
-            newSeg->SetTail(0);
-            newSeg->Append(item);
-            segments->Append(newSeg);
+            Segment newSeg(segmentLength);
+            newSeg.SetHead(0);
+            newSeg.SetTail(0);
+            newSeg.Append(item);
+            segments.Append(newSeg);
         }
         length++;
         return this;
     }
 
-    Sequence<T> *prependImpl(const T &item) {
-        Segment<T> *firstSeg = segments->GetFirst();
-        if (firstSeg->IsHeadNotZero() || firstSeg->IsEmpty()) {
-            firstSeg->Prepend(item);
+    Sequence<T> *PrependImpl(const T &item) {
+        Segment &firstSeg = segments.GetFirst();
+        if (firstSeg.IsHeadNotZero() || firstSeg.IsEmpty()) {
+            firstSeg.Prepend(item);
         } else {
-            auto *newSeg = new Segment<T>(segmentLength);
-            newSeg->SetHead(segmentLength - 1);
-            newSeg->SetTail(segmentLength - 1);
-            newSeg->Prepend(item);
-            segments->Prepend(newSeg);
+            Segment newSeg(segmentLength);
+            newSeg.SetHead(segmentLength - 1);
+            newSeg.SetTail(segmentLength - 1);
+            newSeg.Prepend(item);
+            segments.Prepend(newSeg);
         }
         length++;
         return this;
     }
 
-    Sequence<T> *insertAtImpl(const T &elem, size_t index) override {
+    Sequence<T> *InsertAtImpl(const T &elem, size_t index) override {
         if (index > length) {
             throw std::out_of_range("insertAtImpl: index out of range");
         }
@@ -327,32 +491,32 @@ public:
 
         while (it->MoveNext()) {
             if (currentIdx == index) {
-                result->Append(elem);
+                result->AppendImpl(elem);
             }
-            result->Append(it->Current());
+            result->AppendImpl(it->Current());
             ++currentIdx;
         }
 
         if (index == length) {
-            result->Append(elem);
+            result->AppendImpl(elem);
         }
 
         delete it;
         return result;
     }
 
-    Sequence<T> *concatImpl(const Sequence<T> &other) override {
+    Sequence<T> *ConcatImpl(const Sequence<T> &other) override {
         auto *result = new SegmentedDeque<T>(this->segmentLength);
 
         IEnumerator<T> *iterThis = this->GetEnumerator();
         IEnumerator<T> *iterOther = other.GetEnumerator();
 
         while (iterThis->MoveNext()) {
-            result->Append(iterThis->Current());
+            result->AppendImpl(iterThis->Current());
         }
 
         while (iterOther->MoveNext()) {
-            result->Append(iterOther->Current());
+            result->AppendImpl(iterOther->Current());
         }
 
         delete iterThis;
@@ -361,7 +525,7 @@ public:
         return result;
     }
 
-    Sequence<T> *delImpl(size_t index) override {
+    Sequence<T> *DelImpl(size_t index) override {
         if (index >= length) {
             throw std::out_of_range("delImpl: index out of range");
         }
@@ -372,7 +536,7 @@ public:
 
         while (it->MoveNext()) {
             if (currentIdx != index) {
-                result->Append(it->Current());
+                result->AppendImpl(it->Current());
             }
             ++currentIdx;
         }
@@ -381,16 +545,14 @@ public:
         return result;
     }
 
-    Sequence<T> *createEmpty() const override {
+    Sequence<T> *CreateEmpty() const override {
         return new SegmentedDeque<T>(segmentLength);
     }
 
 protected:
-    Sequence<T> *instance() override {
+    Sequence<T> *Instance() override {
         return this;
     }
-
-
 };
 
 #endif

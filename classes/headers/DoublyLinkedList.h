@@ -22,19 +22,25 @@ private:
         ~Node() = default;
     };
 
+    void swap(DoublyLinkedList &other) noexcept {
+        std::swap(head, other.head);
+        std::swap(tail, other.tail);
+        std::swap(size, other.size);
+    }
+
     class LinkedListEnumerator : public IEnumerator<T> {
     private:
-        const DoublyLinkedList<T> *list;
+        const DoublyLinkedList<T> &list;
         Node *current;
 
     public:
-        explicit LinkedListEnumerator(const DoublyLinkedList<T> *lst)
+        explicit LinkedListEnumerator(const DoublyLinkedList<T> &lst)
             : list(lst), current(nullptr) {
         }
 
         bool MoveNext() override {
             if (current == nullptr)
-                current = list->head;
+                current = list.head;
             else
                 current = current->next;
             return current != nullptr;
@@ -56,12 +62,6 @@ private:
     size_t size;
 
 public:
-    void swap(DoublyLinkedList &other) noexcept {
-        std::swap(head, other.head);
-        std::swap(tail, other.tail);
-        std::swap(size, other.size);
-    }
-
     DoublyLinkedList() : head(nullptr), tail(nullptr), size(0) {
     }
 

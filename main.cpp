@@ -1,12 +1,9 @@
 #include <iostream>
 #include <windows.h>
 #include "classes/headers/MutableArraySequence.h"
-#include "classes/headers/SegmentedDeque.h"
 #include <tuple>
 #include <cmath>
 #include <stdexcept>
-#include <limits>
-#include <vector>
 #include <memory>
 #include "classes/headers/UIDeque.h"
 
