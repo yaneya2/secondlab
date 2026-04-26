@@ -10,34 +10,34 @@ using T = int;
 using DequeType = SegmentedDeque<T>;
 using SeqType = Sequence<T>;
 
-void safeReplace(DequeType *&current, SeqType *result) {
-    if (result && result != current) {
+static void clearInput() {
+    std::cin.clear();
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+}
+
+static void safeReplace(DequeType *&current, SeqType *result) {
+    if (!result) return;
+    if (result != current) {
         delete current;
         current = static_cast<DequeType *>(result);
-        std::cout << "[Memory] Old instance deleted, replaced with new one.\n";
     }
 }
 
-SeqType *createTempSequence() {
+static SeqType *createTempSequence() {
     std::cout << "Введите количество элементов: ";
     size_t n = 0;
-    std::cin >> n;
-    if (std::cin.fail()) {
-        std::cin.clear();
-        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    if (!(std::cin >> n) || n == 0) {
+        clearInput();
         return nullptr;
     }
-    if (n == 0) return nullptr;
-
     auto *temp = new DequeType(4);
     std::cout << "Введите элементы: ";
     for (size_t i = 0; i < n; ++i) {
         T val;
-        std::cin >> val;
-        if (std::cin.fail()) {
-            std::cin.clear();
-            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-            break;
+        if (!(std::cin >> val)) {
+            clearInput();
+            delete temp;
+            return nullptr;
         }
         temp->AppendImpl(val);
     }
@@ -47,21 +47,21 @@ SeqType *createTempSequence() {
 static void printMenu() {
     std::cout << "\n========== SegmentedDeque UI ==========\n"
             << "0.  Выход из программы\n"
-            << "1.  Создать новый Deque (запрос длины сегмента)\n"
+            << "1.  Создать новый Deque\n"
             << "2.  Отобразить текущий Deque\n"
-            << "3.  Показать информацию (длина, пусто ли)\n"
-            << "4.  Append (добавить в конец)\n"
-            << "5.  Prepend (добавить в начало)\n"
-            << "6.  InsertAt (вставить по индексу)\n"
-            << "7.  DeleteAt (удалить по индексу)\n"
-            << "8.  GetSubsequence (получить подпоследовательность)\n"
-            << "9.  Concat (объединить с другой последовательностью)\n"
-            << "10. FindSubsequence (поиск подпоследовательности)\n"
-            << "11. PopFirst (извлечь первый)\n"
-            << "12. PopLast (извлечь последний)\n"
-            << "13. PeekFirst (посмотреть первый)\n"
-            << "14. PeekLast (посмотреть последний)\n"
-            << "15. Replace Empty (заменить на пустой экземпляр)\n"
+            << "3.  Показать информацию (длина, пусто)\n"
+            << "4.  Append\n"
+            << "5.  Prepend\n"
+            << "6.  InsertAt\n"
+            << "7.  DeleteAt\n"
+            << "8.  GetSubsequence\n"
+            << "9.  Concat\n"
+            << "10. FindSubsequence\n"
+            << "11. PopFirst\n"
+            << "12. PopLast\n"
+            << "13. PeekFirst\n"
+            << "14. PeekLast\n"
+            << "15. Replace Empty\n"
             << "=========================================\n"
             << "Выбор: ";
 }
@@ -72,40 +72,34 @@ int run() {
 
     while (choice != 0) {
         printMenu();
-        std::cin >> choice;
-        if (std::cin.fail()) {
-            std::cin.clear();
-            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-            std::cout << "Некорректный ввод. Попробуйте снова.\n";
+        if (!(std::cin >> choice)) {
+            clearInput();
+            std::cout << "Некорректный ввод.\n";
             continue;
         }
 
         try {
             switch (choice) {
                 case 0: break;
-
                 case 1: {
-                    if (current) {
-                        delete current;
-                        std::cout << "[Memory] Previous instance deleted.\n";
-                    }
+                    if (current) delete current;
                     size_t segLen = 0;
-                    std::cout << "Введите длину сегмента (>=2): ";
-                    std::cin >> segLen;
-                    if (segLen < 2) throw std::invalid_argument("Длина сегмента должна быть >= 2");
+                    std::cout << "Длина сегмента (>=2): ";
+                    if (!(std::cin >> segLen) || segLen < 2) {
+                        clearInput();
+                        throw std::invalid_argument("Длина сегмента должна быть >= 2");
+                    }
                     current = new DequeType(segLen);
-                    std::cout << "Новый Deque создан.\n";
+                    std::cout << "Deque создан.\n";
                     break;
                 }
-
                 case 2:
                     if (!current) {
-                        std::cout << "Сначала создайте Deque (пункт 1).\n";
+                        std::cout << "Сначала создайте Deque.\n";
                         break;
                     }
                     std::cout << *current << "\n";
                     break;
-
                 case 3:
                     if (!current) {
                         std::cout << "Сначала создайте Deque.\n";
@@ -114,33 +108,36 @@ int run() {
                     std::cout << "Длина: " << current->GetLength() << "\n";
                     std::cout << "Пусто: " << (current->IsEmpty() ? "Да" : "Нет") << "\n";
                     break;
-
                 case 4: {
                     if (!current) {
                         std::cout << "Сначала создайте Deque.\n";
                         break;
                     }
                     T val;
-                    std::cout << "Значение для добавления в конец: ";
-                    std::cin >> val;
+                    std::cout << "Значение: ";
+                    if (!(std::cin >> val)) {
+                        clearInput();
+                        break;
+                    }
                     safeReplace(current, current->AppendImpl(val));
-                    std::cout << "Элемент добавлен.\n";
+                    std::cout << "Добавлено.\n";
                     break;
                 }
-
                 case 5: {
                     if (!current) {
                         std::cout << "Сначала создайте Deque.\n";
                         break;
                     }
                     T val;
-                    std::cout << "Значение для добавления в начало: ";
-                    std::cin >> val;
+                    std::cout << "Значение: ";
+                    if (!(std::cin >> val)) {
+                        clearInput();
+                        break;
+                    }
                     safeReplace(current, current->PrependImpl(val));
-                    std::cout << "Элемент добавлен.\n";
+                    std::cout << "Добавлено.\n";
                     break;
                 }
-
                 case 6: {
                     if (!current) {
                         std::cout << "Сначала создайте Deque.\n";
@@ -149,27 +146,34 @@ int run() {
                     T val;
                     size_t idx;
                     std::cout << "Значение: ";
-                    std::cin >> val;
-                    std::cout << "Индекс вставки: ";
-                    std::cin >> idx;
+                    if (!(std::cin >> val)) {
+                        clearInput();
+                        break;
+                    }
+                    std::cout << "Индекс: ";
+                    if (!(std::cin >> idx)) {
+                        clearInput();
+                        break;
+                    }
                     safeReplace(current, current->InsertAtImpl(val, idx));
-                    std::cout << "Элемент вставлен.\n";
+                    std::cout << "Вставлено.\n";
                     break;
                 }
-
                 case 7: {
                     if (!current) {
                         std::cout << "Сначала создайте Deque.\n";
                         break;
                     }
                     size_t idx;
-                    std::cout << "Индекс для удаления: ";
-                    std::cin >> idx;
+                    std::cout << "Индекс: ";
+                    if (!(std::cin >> idx)) {
+                        clearInput();
+                        break;
+                    }
                     safeReplace(current, current->DelImpl(idx));
-                    std::cout << "Элемент удален.\n";
+                    std::cout << "Удалено.\n";
                     break;
                 }
-
                 case 8: {
                     if (!current) {
                         std::cout << "Сначала создайте Deque.\n";
@@ -177,14 +181,19 @@ int run() {
                     }
                     size_t start, end;
                     std::cout << "Начальный индекс: ";
-                    std::cin >> start;
+                    if (!(std::cin >> start)) {
+                        clearInput();
+                        break;
+                    }
                     std::cout << "Конечный индекс: ";
-                    std::cin >> end;
+                    if (!(std::cin >> end)) {
+                        clearInput();
+                        break;
+                    }
                     safeReplace(current, current->GetSubsequence(start, end));
-                    std::cout << "Подпоследовательность получена.\n";
+                    std::cout << "Получено.\n";
                     break;
                 }
-
                 case 9: {
                     if (!current) {
                         std::cout << "Сначала создайте Deque.\n";
@@ -192,16 +201,15 @@ int run() {
                     }
                     auto *temp = createTempSequence();
                     if (!temp) {
-                        std::cout << "Пустая последовательность, объединение отменено.\n";
+                        std::cout << "Отменено.\n";
                         break;
                     }
                     auto *res = current->ConcatImpl(*temp);
-                    delete temp; // Временный объект удаляется сразу после использования
+                    delete temp;
                     safeReplace(current, res);
-                    std::cout << "Объединение выполнено.\n";
+                    std::cout << "Объединено.\n";
                     break;
                 }
-
                 case 10: {
                     if (!current) {
                         std::cout << "Сначала создайте Deque.\n";
@@ -209,69 +217,68 @@ int run() {
                     }
                     auto *sub = createTempSequence();
                     if (!sub) {
-                        std::cout << "Пустая подпоследовательность.\n";
+                        std::cout << "Отменено.\n";
                         break;
                     }
                     int pos = current->FindSubsequence(*sub);
-                    delete sub; // Удаляем временный объект
-                    if (pos != -1) std::cout << "Найдено, начало по индексу: " << pos << "\n";
-                    else std::cout << "Подпоследовательность не найдена.\n";
+                    delete sub;
+                    if (pos != -1) std::cout << "Найдено по индексу: " << pos << "\n";
+                    else std::cout << "Не найдено.\n";
                     break;
                 }
-
                 case 11: {
                     if (!current) {
                         std::cout << "Сначала создайте Deque.\n";
                         break;
                     }
+                    if (current->IsEmpty()) {
+                        std::cout << "Пусто.\n";
+                        break;
+                    }
                     T val = current->PopFirst();
-                    std::cout << "Извлечен первый элемент: " << val << "\n";
+                    std::cout << "Извлечено: " << val << "\n";
                     break;
                 }
-
                 case 12: {
                     if (!current) {
                         std::cout << "Сначала создайте Deque.\n";
                         break;
                     }
+                    if (current->IsEmpty()) {
+                        std::cout << "Пусто.\n";
+                        break;
+                    }
                     T val = current->PopLast();
-                    std::cout << "Извлечен последний элемент: " << val << "\n";
+                    std::cout << "Извлечено: " << val << "\n";
                     break;
                 }
-
                 case 13: {
                     if (!current) {
                         std::cout << "Сначала создайте Deque.\n";
                         break;
                     }
-                    T val = current->GetFirst();
-                    std::cout << "Первый элемент: " << val << "\n";
+                    std::cout << "Первый: " << current->GetFirst() << "\n";
                     break;
                 }
-
                 case 14: {
                     if (!current) {
                         std::cout << "Сначала создайте Deque.\n";
                         break;
                     }
-                    T val = current->GetLast();
-                    std::cout << "Последний элемент: " << val << "\n";
+                    std::cout << "Последний: " << current->GetLast() << "\n";
                     break;
                 }
-
                 case 15: {
                     if (!current) {
                         std::cout << "Сначала создайте Deque.\n";
                         break;
                     }
-                    auto *res = current->CreateEmpty();
-                    safeReplace(current, res);
-                    std::cout << "Заменено на пустой экземпляр.\n";
+                    safeReplace(current, current->CreateEmpty());
+                    std::cout << "Заменено.\n";
                     break;
                 }
-
                 default:
-                    std::cout << "Неверный выбор. Попробуйте снова.\n";
+                    std::cout << "Неверный выбор.\n";
                     break;
             }
         } catch (const std::exception &e) {
@@ -279,6 +286,6 @@ int run() {
         }
     }
     delete current;
-    std::cout << "Завершение работы. Память освобождена.\n";
+    std::cout << "Завершение работы.\n";
     return 0;
 }

@@ -20,7 +20,7 @@ private:
 
         class SegmentEnumerator : public IEnumerator<T> {
         private:
-            const Segment &segment;
+            const Segment segment;
             size_t currentIndex;
 
         public:
@@ -159,24 +159,24 @@ private:
         T PeekFirst() const { return data.Get(head); }
         T PeekLast() const { return data.Get(tail); }
 
-        bool PopFirst(T &outValue) {
-            if (head > tail || head >= data.GetSize()) {
-                return false;
+        T PopFirst() {
+            if (IsEmpty() || head > tail || head >= data.GetSize()) {
+                throw std::out_of_range("Segment::PopFirst: segment is empty");
             }
-            outValue = data.Get(head);
+            T result = data.Get(head);
             ++head;
-            size--;
-            return true;
+            --size;
+            return result;
         }
 
-        bool PopLast(T &outValue) {
-            if (tail < head) {
-                return false;
+        T PopLast() {
+            if (IsEmpty() || tail < head) {
+                throw std::out_of_range("Segment::PopLast: segment is empty");
             }
-            outValue = data.Get(tail);
+            T result = data.Get(tail);
             --tail;
-            size--;
-            return true;
+            --size;
+            return result;
         }
 
         IEnumerator<T> *GetEnumerator() const {
@@ -303,8 +303,7 @@ public:
         }
 
         Segment &firstSeg = segments.GetFirst();
-        T result;
-        firstSeg.PopFirst(result);
+        T result = firstSeg.PopFirst();
         --length;
 
         if (firstSeg.GetSize() == 0) {
@@ -326,8 +325,7 @@ public:
         }
 
         Segment &lastSeg = segments.GetLast();
-        T res{};
-        lastSeg.PopLast(res);
+        T result = lastSeg.PopLast();
         --length;
 
         if (lastSeg.GetSize() == 0) {
@@ -340,7 +338,7 @@ public:
                 segments.Append(newSeg);
             }
         }
-        return res;
+        return result;
     }
 
     int FindSubsequence(const Sequence<T> &subsequence) const {
@@ -493,7 +491,8 @@ public:
             if (currentIdx == index) {
                 result->AppendImpl(elem);
             }
-            result->AppendImpl(it->Current());
+            T currentElem = it->Current();
+            result->AppendImpl(currentElem);
             ++currentIdx;
         }
 

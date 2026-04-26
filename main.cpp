@@ -5,22 +5,25 @@
 #include <cmath>
 #include <stdexcept>
 #include <memory>
+
+#include "classes/headers/SegmentedDeque.h"
 #include "classes/headers/UIDeque.h"
+#include "classes/headers/MutableArraySequence.h"
 
 double Length(double g, double v, double alpha) {
     return v * v * sin(2.0 * alpha) / g;
 }
 
-std::tuple<double, double> solve_projectile(double g, double x, double v_start, double v_end, int count_step,
-                                            double eps) {
-    if (g < 0 || x < 0 || v_start < 0 || v_end < 0 || count_step < 0 || eps < 0) {
+template<typename T>
+std::tuple<double, double> SolveProjectile(double g, double x, const Sequence<T> &v, double eps) {
+    if (g < 0 || x < 0 || eps < 0 || v.GetLength() == 0) {
         throw std::invalid_argument("Invalid arguments");
     }
-    double step = (v_end - v_start) / count_step;
-    double v_current = 0;
+    T v_current = 0;
     double alpha1 = 0, alpha2 = 0, alpha = 0;
-    for (int i = 0; i < count_step; ++i) {
-        v_current = step * i + v_start;
+    auto iter = v.GetEnumerator();
+    while (iter->MoveNext()) {
+        v_current = iter->Current();
         alpha1 = 0;
         alpha2 = std::numbers::pi / 4;
         while (alpha2 - alpha1 > eps) {

@@ -126,19 +126,19 @@ public:
         clear();
     }
 
-    T GetFirst() const {
+    T& GetFirst() const {
         if (size == 0)
             throw std::out_of_range("list is empty");
         return head->data;
     }
 
-    T GetLast() const {
+    T& GetLast() const {
         if (size == 0)
             throw std::out_of_range("list is empty");
         return tail->data;
     }
 
-    T Get(size_t index) const {
+    T& Get(size_t index) const {
         if (index >= size)
             throw std::out_of_range("IndexOutOfRange");
         Node *current = head;
@@ -256,7 +256,7 @@ public:
     }
 
     IEnumerator<T> *GetEnumerator() const {
-        return new LinkedListEnumerator(this);
+        return new LinkedListEnumerator(*this);
     }
 
 private:
